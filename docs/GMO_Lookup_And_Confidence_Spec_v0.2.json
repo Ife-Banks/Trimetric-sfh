@@ -1,0 +1,114 @@
+{
+    "project": "SHF GMO Likelihood Detection & Lookup Architecture",
+    "version": "0.2 — crop list cross-referenced against Non-GMO Project High-Risk List and USDA AMS Bioengineered Foods List",
+    "scope_note": "Likelihood only, never proof — a photo cannot confirm GMO content, only flag evidence. This constraint is a UI requirement as much as a data one: every verdict screen must state it plainly.",
+    "sources": [
+        { "name": "Non-GMO Project High-Risk List", "url": "https://www.nongmoproject.org/risk-status/", "used_for": "explicit_crop_matches crop list" },
+        { "name": "USDA AMS List of Bioengineered Foods", "url": "https://www.ams.usda.gov/rules-regulations/be/bioengineered-foods-list", "used_for": "regulatory cross-check on crop list, per-crop derivative fact sheets" },
+        { "name": "Non-GMO Project GMO FAQ", "url": "https://www.nongmoproject.org/gmo-faq/", "used_for": "ambiguous_derivative_matches list" }
+    ],
+    "changelog_from_0.1": [
+        "Added apple, cotton (as its own crop, not just cottonseed oil), potato, and zucchini/summer squash — present on both source lists but missing from the 0.1 draft",
+        "Added sugar, molasses, cellulose, soy hemoglobin, and unspecified 'vegetable X' to ambiguous_derivative_matches per Non-GMO Project FAQ wording",
+        "Noted USDA-only crops (eggplant, pineapple, sugarcane) as lower priority — check against your target market before including; salmon excluded as not relevant to oral-care/GMO food scanning"
+    ],
+
+    "certification_short_circuit": {
+        "note": "Check BEFORE ingredient matching, same pattern as fluoride's organic-cert short circuit. A certification is stronger evidence than any ingredient match.",
+        "terms": ["Non-GMO Project Verified", "USDA Organic", "Certified Organic", "EU Organic"],
+        "on_match": { "likelihood": "Low", "confidence": "High", "stop_further_scoring": true }
+    },
+
+    "terms_lookup_table": {
+        "explicit_crop_matches": {
+            "note": "Ingredient directly names a high-GMO-adoption crop. Strong evidence — these are what count toward the likelihood score.",
+            "entries": [
+                { "crop_family": "corn", "aliases": ["corn", "corn starch", "cornstarch", "corn syrup", "high fructose corn syrup", "corn oil", "dextrose (corn-derived)"] },
+                { "crop_family": "soy", "aliases": ["soy", "soybean", "soybean oil", "soy lecithin", "soy protein", "textured vegetable protein"] },
+                { "crop_family": "canola", "aliases": ["canola", "canola oil", "rapeseed oil"] },
+                { "crop_family": "cottonseed", "aliases": ["cottonseed", "cottonseed oil"] },
+                { "crop_family": "sugar_beet", "aliases": ["sugar beet", "beet sugar"] },
+                { "crop_family": "alfalfa", "aliases": ["alfalfa"] },
+                { "crop_family": "papaya", "aliases": ["papaya"], "note": "Hawaiian papaya specifically — high GMO adoption due to ringspot virus resistance breeding" },
+                { "crop_family": "apple", "aliases": ["apple"], "note": "Arctic apple varieties specifically — non-browning trait" },
+                { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
+                { "crop_family": "potato", "aliases": ["potato"] },
+                { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] }
+            ],
+            "lower_priority_check_against_target_market": [
+                { "crop_family": "eggplant", "aliases": ["eggplant"], "note": "USDA BE list only (BARI Bt Begun varieties) — check relevance before including" },
+                { "crop_family": "sugarcane", "aliases": ["sugarcane"], "note": "USDA BE list only (Bt insect-resistant varieties) — check relevance before including" }
+            ]
+        },
+        "ambiguous_derivative_matches": {
+            "note": "Common ingredients that MAY derive from a GMO crop but the label does not disclose the source. Presence of these should lower confidence, not raise likelihood — this is the key difference from fluoride matching.",
+            "entries": [
+                { "ingredient": "citric acid", "possible_sources": ["corn", "beet", "synthetic — cannot determine from label"] },
+                { "ingredient": "ascorbic acid", "possible_sources": ["corn", "synthetic"] },
+                { "ingredient": "maltodextrin", "possible_sources": ["corn", "rice", "potato"] },
+                { "ingredient": "vegetable oil (unspecified)", "possible_sources": ["soy", "canola", "corn", "palm — cannot determine without further label detail"] },
+                { "ingredient": "natural flavors", "possible_sources": ["unknown — carrier/base varies widely"] },
+                { "ingredient": "xanthan gum", "possible_sources": ["corn", "soy", "wheat"] },
+                { "ingredient": "sugar (unspecified)", "possible_sources": ["sugar beet", "sugarcane — cannot determine without 'cane' or 'beet' specified"] },
+                { "ingredient": "molasses", "possible_sources": ["sugar beet", "sugarcane"] },
+                { "ingredient": "cellulose", "possible_sources": ["various plant sources, rarely disclosed"] },
+                { "ingredient": "soy hemoglobin", "possible_sources": ["soy — used in some plant-based meat products"] },
+                { "ingredient": "vegetable [X] (any unspecified 'vegetable' term)", "possible_sources": ["catch-all: 'vegetable glycerin', 'vegetable protein', 'vegetable starch' etc. — Non-GMO Project explicitly flags any unspecified 'vegetable' term as ambiguous"] }
+            ]
+        }
+    },
+
+    "likelihood_scoring": {
+        "method": "Count N = number of DISTINCT crop_family values matched from explicit_crop_matches only. Ambiguous derivatives never count toward N.",
+        "tiers": [
+            { "N": 0, "likelihood": "Low" },
+            { "N": 1, "likelihood": "Medium" },
+            { "N": "2+", "likelihood": "High" }
+        ],
+        "rationale": "Distinct families, not raw ingredient count — 'corn syrup, corn starch, modified corn starch' is still just corn (N=1), not High. Prevents single-crop products from over-scoring."
+    },
+
+    "confidence_scoring": {
+        "method": "Points system, same shape as fluoride's confidence formula.",
+        "factors": [
+            { "factor": "Ingredient list completeness", "condition": "Full list OCR'd, no visible truncation", "points": 2 },
+            { "factor": "Product identification", "condition": "Barcode/name matched an Open Food Facts entry", "points": 2 },
+            { "factor": "Lookup match rate", "condition": "≥80% of extracted ingredients recognized (matched explicit crop, ambiguous derivative, or known non-GMO-relevant ingredient)", "points": 1 },
+            { "factor": "Certification clarity", "condition": "Cert statement clearly readable either way (has one, or explicitly none)", "points": 1 },
+            { "factor": "Ambiguous-derivative penalty", "condition": "One or more ambiguous derivatives matched with NO explicit crop match found elsewhere", "points": -1, "note": "This is the GMO-specific addition — reflects that the evidence is genuinely inconclusive, not just incomplete" }
+        ],
+        "tiers": [
+            { "points": "4-5", "confidence": "High" },
+            { "points": "2-3", "confidence": "Medium" },
+            { "points": "0-1 or negative", "confidence": "Low" }
+        ]
+    },
+
+    "verdict_screen_schema": {
+        "fields": [
+            { "field": "Product Name / Brand", "source": "ocr_or_barcode_match" },
+            { "field": "Result", "source": "computed", "from": "likelihood_scoring", "ui": "Low / Medium / High GMO Likelihood — primary badge" },
+            { "field": "Confidence", "source": "computed", "from": "confidence_scoring", "ui": "secondary badge, always shown alongside Result" },
+            { "field": "Matched Ingredient(s)", "source": "computed", "from": "terms_lookup_table matches found in ingredients text" },
+            { "field": "Certification", "source": "computed", "from": "certification_short_circuit", "always_shown": false, "note": "Only shown if a certification was detected" },
+            { "field": "Why It Matters", "source": "computed", "note": "Must always restate the honesty constraint: a photo estimates likelihood from visible evidence, it cannot confirm GMO content — this line is non-negotiable per the brief" }
+        ]
+    },
+
+    "submission_form_schema": {
+        "note": "Same trigger logic as fluoride — shown when confidence is Low. Mirrors fluoride form shape.",
+        "fields": [
+            { "field": "Product name", "prefill": "OCR guess if available", "required": true },
+            { "field": "Brand", "prefill": "OCR guess if available", "required": false },
+            { "field": "Ingredients text", "prefill": "OCR extraction, editable", "required": true },
+            { "field": "Certification visible on packaging, if any", "input": "dropdown from certification_short_circuit terms, or 'none visible'", "required": false },
+            { "field": "Photo", "source": "auto-attached from capture step", "required": true }
+        ]
+    },
+
+    "open_questions_before_v1": [
+        "Cross-reference explicit_crop_matches and ambiguous_derivative_matches against the Non-GMO Project's published High-Risk Ingredients list and the USDA Bioengineered Food List — this draft is a starting seed, not verified against those sources yet",
+        "Decide whether Open Food Facts ingredient tags (e.g. en:corn-starch) can be matched directly instead of building custom text normalization — worth a spike before committing dev time to a regex-based parser",
+        "Confirm whether zucchini/summer squash (also GM-adopted in some markets) is relevant given your target shelf, or safely out of scope"
+    ]
+}

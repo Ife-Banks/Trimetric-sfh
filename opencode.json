@@ -1,0 +1,5 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["docs/06_AGENT_CONTEXT.md"],
+  "permission": "ask"
+}

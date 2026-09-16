@@ -1,0 +1,170 @@
+{
+    "project": "SHF Fluoride Detection & Lookup Architecture",
+    "version": "1.1",
+    "changelog_from_1.0": [
+        "Added FL06 potassium fluoride (missing compound found in salt products during dataset review)",
+        "Replaced single universal PPM_Classification_Rules with four category-specific threshold tables",
+        "Added category_detection step to pipeline — required before threshold lookup",
+        "Added synonym fields for common EU-language compound names (French, German, Spanish)"
+    ],
+
+    "terms_lookup_table": [
+        {
+            "term_id": "FL01",
+            "raw_term": "sodium fluoride",
+            "normalized_term": "Sodium Fluoride",
+            "synonyms": "NaF, Natrium Fluoride, E954 (contextual), fluorure de sodium, Natriumfluorid, fluoruro de sodio, natriumfluoridi, fluorid sodný",
+            "compound_type": "Active Fluoride",
+            "std_concentration_wt": "0.243%",
+            "ppm_multiplier": 4500,
+            "default_ppm": 1100,
+            "regex_pattern": "\\b(sodium\\s+fluoride|naf|fluorure\\s+de\\s+sodium|natriumfluorid|fluoruro\\s+de\\s+sodio|natriumfluoridi|fluorid\\s+sodn[yý])\\b"
+        },
+        {
+            "term_id": "FL02",
+            "raw_term": "stannous fluoride",
+            "normalized_term": "Stannous Fluoride",
+            "synonyms": "SnF2, Tin(II) Fluoride",
+            "compound_type": "Active Fluoride",
+            "std_concentration_wt": "0.454%",
+            "ppm_multiplier": 2420,
+            "default_ppm": 1100,
+            "regex_pattern": "\\b(stannous\\s+fluoride|snf2|tin\\s+fluoride)\\b"
+        },
+        {
+            "term_id": "FL03",
+            "raw_term": "sodium monofluorophosphate",
+            "normalized_term": "Sodium Monofluorophosphate",
+            "synonyms": "SMFP, MFP, Na2PO3F",
+            "compound_type": "Active Fluoride",
+            "std_concentration_wt": "0.76%",
+            "ppm_multiplier": 1315,
+            "default_ppm": 1000,
+            "regex_pattern": "\\b(sodium\\s+monofluorophosphate|smfp|mfp|na2po3f)\\b"
+        },
+        {
+            "term_id": "FL04",
+            "raw_term": "amine fluoride",
+            "normalized_term": "Amine Fluoride",
+            "synonyms": "Olaflur, Dectaflur",
+            "compound_type": "Active Fluoride",
+            "std_concentration_wt": "1.00%",
+            "ppm_multiplier": 1400,
+            "default_ppm": 1400,
+            "regex_pattern": "\\b(amine\\s+fluoride|olaflur|dectaflur)\\b"
+        },
+        {
+            "term_id": "FL05",
+            "raw_term": "acidulated phosphate fluoride",
+            "normalized_term": "Acidulated Phosphate Fluoride",
+            "synonyms": "APF",
+            "compound_type": "Active Fluoride",
+            "std_concentration_wt": "1.23%",
+            "ppm_multiplier": 10000,
+            "default_ppm": 12300,
+            "regex_pattern": "\\b(acidulated\\s+phosphate\\s+fluoride|apf)\\b"
+        },
+        {
+            "term_id": "FL06",
+            "raw_term": "potassium fluoride",
+            "normalized_term": "Potassium Fluoride",
+            "synonyms": "KF, fluorure de potassium, Kaliumfluorid, fluoruro de potasio",
+            "compound_type": "Active Fluoride",
+            "compound_context": "Primary fluoridating agent in table salt programs (not toothpaste). Reported in mg/kg, not %.",
+            "std_concentration_wt": "N/A — reported as mg/kg in salt",
+            "ppm_multiplier": null,
+            "default_ppm_by_category": { "salt": 225 },
+            "regex_pattern": "\\b(potassium\\s+fluoride|kf|fluorure\\s+de\\s+potassium|kaliumfluorid|fluoruro\\s+de\\s+potasio)\\b"
+        },
+        {
+            "term_id": "NFL01",
+            "raw_term": "nano-hydroxyapatite",
+            "normalized_term": "Nano-hydroxyapatite",
+            "synonyms": "nHAp, Hydroxyapatite, Micro-hydroxyapatite",
+            "compound_type": "Fluoride Alternative",
+            "default_ppm": 0,
+            "classification": "Fluoride-Free",
+            "regex_pattern": "\\b(nano[- ]?hydroxyapatite|nhap|hydroxyapatite)\\b"
+        },
+        {
+            "term_id": "NFL02",
+            "raw_term": "calcium carbonate",
+            "normalized_term": "Calcium Carbonate",
+            "synonyms": "Chalk, Limestone, CaCO3",
+            "compound_type": "Abrasive / Non-Fluoride Active",
+            "default_ppm": 0,
+            "classification": "Fluoride-Free",
+            "regex_pattern": "\\b(calcium\\s+carbonate|caco3)\\b"
+        }
+    ],
+
+    "category_detection": {
+        "note": "Run BEFORE threshold lookup. Category gates which PPM table applies — the same ppm number means a different thing in toothpaste (topical, spit out) vs. water/salt/milk (ingested).",
+        "signals": [
+            "OFF/barcode category metadata if product matched",
+            "Keyword match in product name/category text: 'toothpaste','dentifrice','gel' -> toothpaste; 'mouthwash','rinse' -> mouthwash; 'water','spring','mineral' -> water; 'salt','sel','sal' -> salt; 'milk','formula','dairy' -> milk",
+            "If no category signal found -> treat as UNKNOWN, do not apply any threshold table, force LOW confidence / user prompt for category"
+        ]
+    },
+
+    "category_ppm_tables": {
+        "toothpaste_gel": [
+            { "tier": "Low (Children's)", "ppm_range": [250, 500], "verdict": "Low Fluoride Content", "guidance": "Formulated for young toddlers to reduce fluorosis risk if swallowed." },
+            { "tier": "Standard (Adult OTC)", "ppm_range": [1000, 1500], "verdict": "Standard Fluoride Content", "guidance": "Typical daily adult cavity protection level." },
+            { "tier": "High (Prescription/Clinical)", "ppm_range": [5000, 25000], "verdict": "High Fluoride Content — Prescription Strength", "guidance": "Dentist-prescribed or in-office use only; not typical daily OTC strength." },
+            { "tier": "Fluoride-Free", "ppm_range": [0, 0], "verdict": "Fluoride-Free" }
+        ],
+        "mouthwash_rinse": [
+            { "tier": "Low", "ppm_range": [0, 99], "verdict": "Low Fluoride Content" },
+            { "tier": "Standard (Daily Rinse)", "ppm_range": [100, 250], "verdict": "Standard Fluoride Content", "guidance": "Typical daily anticavity rinse strength." },
+            { "tier": "High", "ppm_range": [251, 1000], "verdict": "High Fluoride Content" },
+            { "tier": "Fluoride-Free", "ppm_range": [0, 0], "verdict": "Fluoride-Free" }
+        ],
+        "water_beverages": [
+            { "tier": "Trace/Fluoride-Free", "ppm_range": [0, 0.3], "verdict": "Fluoride-Free / Trace" },
+            { "tier": "Standard (Optimal Fluoridation)", "ppm_range": [0.3, 1.0], "verdict": "Standard — Optimal Fluoridation Level", "guidance": "Within WHO-recommended optimal range for community water fluoridation." },
+            { "tier": "High", "ppm_range": [1.01, 10], "verdict": "High — Above Optimal Range", "guidance": "Above typical optimal drinking water fluoridation levels." }
+        ],
+        "salt": [
+            { "tier": "Standard (Fluoridation Program)", "ppm_range_mg_per_kg": [200, 250], "verdict": "Standard — Fluoridated Salt", "guidance": "Consistent with public health salt fluoridation programs." },
+            { "tier": "Fluoride-Free", "ppm_range_mg_per_kg": [0, 0], "verdict": "Fluoride-Free" }
+        ],
+        "milk_formula": [
+            { "tier": "Low/Trace", "ppm_range": [0, 1.0], "verdict": "Low Fluoride Content" },
+            { "tier": "Standard (Fortification Program)", "ppm_range": [1.01, 3.0], "verdict": "Standard — Fortified", "guidance": "Consistent with targeted milk/formula fluoride fortification programs." }
+        ]
+    },
+
+    "confidence_scoring_rules": {
+        "high_confidence_threshold": 0.9,
+        "medium_confidence_threshold": 0.6,
+        "low_confidence_threshold": 0.01,
+        "trigger_user_input_below": 0.6,
+        "triggers": [
+            {
+                "status": "LOW_CONFIDENCE",
+                "confidence_score_range": "[0.01, 0.59]",
+                "action": "PROMPT_USER_INPUT",
+                "reasons": [
+                    "Ambiguous compound name matched without concentration",
+                    "Conflicting text tokens (e.g. both 'Fluoride-Free' and 'Sodium Fluoride' detected)",
+                    "OCR text extraction quality below 60%",
+                    "Category could not be determined — no threshold table can be safely applied",
+                    "Unusual concentration for detected category (out-of-bounds anomaly)"
+                ],
+                "ui_prompt": "We found fluoride terms, but couldn't verify exact details. Please select your product type or confirm ingredients."
+            },
+            {
+                "status": "NO_DATA",
+                "confidence_score_range": "0.00",
+                "action": "PROMPT_USER_INPUT",
+                "reasons": [
+                    "Zero matched terms in ingredients text",
+                    "Barcode not found in master database",
+                    "OCR pipeline failed to extract readable text"
+                ],
+                "ui_prompt": "We couldn't recognize this product. Please enter the product name or scan the active ingredients list."
+            }
+        ]
+    }
+}
