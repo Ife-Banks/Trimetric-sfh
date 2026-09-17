@@ -139,6 +139,24 @@ interface EngineResult {
 }
 ```
 
+### 5.1 Engine input contract
+
+Both engines take the same two arguments. `EngineContext` carries everything the engine needs that isn't in the raw ingredients text itself — OCR quality signals and whatever identity resolution already happened in FR-2, so the engine never has to re-derive this from string content (e.g. guessing truncation from a "…" character, which is fragile and won't reflect real OCR metadata).
+
+```typescript
+interface EngineContext {
+  ocrMeanConfidence: number;        // 0–1, from Tesseract's per-block confidence (FR-3)
+  isTruncated: boolean;             // OCR pipeline flagged the ingredients list as cut off
+  identityMatch: 'barcode' | 'name' | 'none';  // which FR-2 tier resolved before the engine ran
+  category: 'gmo_food' | 'oral_care';
+  subcategory: string;              // from FR-4 category routing
+}
+
+type Engine = (ingredientsText: string, ctx: EngineContext) => EngineResult;
+```
+
+`gmoEngine` and `fluorideEngine` both implement `Engine`. Neither may import React or a Supabase client (see `06_AGENT_CONTEXT.md` §5) — pure functions over `(ingredientsText, ctx)`, which is what makes them independently unit-testable without mocking themselves.
+
 `configVersion` matters: when a lookup table changes, stored verdicts computed under an older version can be identified and recomputed.
 
 ---

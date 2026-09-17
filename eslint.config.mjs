@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored binaries copied by `npm run ocr:assets`: minified tesseract
+    // worker + WASM core. Not source; linting them is noise.
+    "**/public/vendor/**",
+    "**/*.min.js",
   ]),
 ]);
 

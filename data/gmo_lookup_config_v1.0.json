@@ -1,0 +1,70 @@
+{
+  "project": "SHF GMO Likelihood Detection — Lookup Config v1.0",
+  "version": "1.0",
+  "certification_short_circuit": {
+    "note": "Check BEFORE ingredient matching. A certification is stronger evidence than any ingredient match.",
+    "terms": ["Non-GMO Project Verified", "USDA Organic", "Certified Organic", "EU Organic"],
+    "on_match": { "likelihood": "Low", "confidence": "High", "stop_further_scoring": true }
+  },
+  "explicit_crop_matches": {
+    "note": "Ingredient directly names a high-GMO-adoption crop. These count toward the likelihood score.",
+    "entries": [
+      { "crop_family": "corn", "aliases": ["corn", "corn starch", "cornstarch", "corn syrup", "high fructose corn syrup", "corn oil", "dextrose (corn-derived)"] },
+      { "crop_family": "soy", "aliases": ["soy", "soybean", "soybean oil", "soy lecithin", "soy protein", "textured vegetable protein"] },
+      { "crop_family": "canola", "aliases": ["canola", "canola oil", "rapeseed oil"] },
+      { "crop_family": "cottonseed", "aliases": ["cottonseed", "cottonseed oil"] },
+      { "crop_family": "sugar_beet", "aliases": ["sugar beet", "beet sugar"] },
+      { "crop_family": "alfalfa", "aliases": ["alfalfa"] },
+      { "crop_family": "papaya", "aliases": ["papaya"] },
+      { "crop_family": "apple", "aliases": ["apple"] },
+      { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
+      { "crop_family": "potato", "aliases": ["potato"] },
+      { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] }
+    ]
+  },
+  "ambiguous_derivative_matches": {
+    "note": "Ingredients that MAY derive from a GMO crop but the label does not disclose the source. Presence lowers confidence, not likelihood.",
+    "entries": [
+      { "ingredient": "citric acid", "possible_sources": ["corn", "beet", "synthetic"] },
+      { "ingredient": "ascorbic acid", "possible_sources": ["corn", "synthetic"] },
+      { "ingredient": "maltodextrin", "possible_sources": ["corn", "rice", "potato"] },
+      { "ingredient": "vegetable oil (unspecified)", "possible_sources": ["soy", "canola", "corn", "palm"] },
+      { "ingredient": "natural flavors", "possible_sources": ["unknown"] },
+      { "ingredient": "xanthan gum", "possible_sources": ["corn", "soy", "wheat"] },
+      { "ingredient": "sugar (unspecified)", "possible_sources": ["sugar beet", "sugarcane"] },
+      { "ingredient": "molasses", "possible_sources": ["sugar beet", "sugarcane"] },
+      { "ingredient": "cellulose", "possible_sources": ["various plant sources"] },
+      { "ingredient": "soy hemoglobin", "possible_sources": ["soy"] },
+      { "ingredient": "vegetable", "possible_sources": ["unspecified 'vegetable X' term"] }
+    ]
+  },
+  "low_risk_tokens": [
+    "salt", "water", "vinegar", "pepper", "garlic", "onion", "spices",
+    "sugar", "molasses", "honey", "oil", "vegetable oil", "flour", "rice",
+    "natural flavors", "natural flavoring", "monk fruit", "stevia",
+    "xanthan gum", "citric acid", "fruit juice", "puree", "vinegar"
+  ],
+  "likelihood_scoring": {
+    "method": "Count N = number of distinct crop_family values matched from explicit_crop_matches only. Ambiguous derivatives never count toward N.",
+    "tiers": [
+      { "N": 0, "likelihood": "Low" },
+      { "N": 1, "likelihood": "Medium" },
+      { "N": "2+", "likelihood": "High" }
+    ]
+  },
+  "confidence_scoring": {
+    "method": "Points system. Factors below award points; ambiguous-derivative penalty applies once per product when ambiguous matches exist with no explicit crop.",
+    "factors": [
+      { "factor": "Ingredient list completeness", "condition": "Full list OCR'd, no visible truncation", "points": 2 },
+      { "factor": "Product identification", "condition": "Barcode matched an Open Food Facts entry", "points": 2 },
+      { "factor": "Lookup match rate", "condition": ">=80% of extracted ingredients recognized", "points": 1 },
+      { "factor": "Certification clarity", "condition": "Cert statement clearly readable either way", "points": 1 },
+      { "factor": "Ambiguous-derivative penalty", "condition": "One or more ambiguous derivatives matched with NO explicit crop found elsewhere", "points": -1 }
+    ],
+    "tiers": [
+      { "points": "4-5", "confidence": "High" },
+      { "points": "2-3", "confidence": "Medium" },
+      { "points": "0-1 or negative", "confidence": "Low" }
+    ]
+  }
+}

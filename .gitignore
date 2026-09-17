@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+# vitest cache
+/node_modules/.vite
+/vitest-result*.json
 
 # next.js
 /.next/
@@ -40,3 +43,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# OCR language assets — fetched by scripts/fetch-ocr-assets.mjs
+# (eng.traineddata is ~23MB; vendored worker/core files ~17MB)
+/eng.traineddata
+/public/vendor/tesseract

@@ -86,12 +86,20 @@ interface EngineResult {
   configVersion: string;
 }
 
+interface EngineContext {
+  ocrMeanConfidence: number;        // 0–1, from Tesseract per-block confidence
+  isTruncated: boolean;             // OCR pipeline flagged the list as cut off — never inferred from text content
+  identityMatch: 'barcode' | 'name' | 'none';
+  category: 'gmo_food' | 'oral_care';
+  subcategory: string;
+}
+
 type Engine = (ingredientsText: string, ctx: EngineContext) => EngineResult;
 ```
 
 `gmoEngine` and `fluorideEngine` both satisfy `Engine`. `VerdictScreen` accepts an `EngineResult` and does not know which engine produced it.
 
-**Rule: nothing in `src/engines/` may import React or any Supabase client.** Pure functions over text, unit-testable in isolation.
+**Rule: nothing in `src/engines/` may import React or any Supabase client.** Pure functions over `(ingredientsText, ctx)`, unit-testable in isolation — which means tests import the real function directly. Never mock the engine under test; that tests the mock instead of the code.
 
 ---
 
