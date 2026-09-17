@@ -6,7 +6,13 @@
 
 import type { IdentityMatch, ProductRow } from "@/lib/identification/productIdentification"
 import { GMO_CONSTRAINT_NOTICE } from "./gmoEngine"
+import { FLUORIDE_CONSTRAINT_NOTICE } from "./fluorideEngine"
 import type { EngineResult, EngineTerm, VerdictTier } from "./types"
+
+const CONSTRAINT_NOTICE_BY_CATEGORY: Record<ProductRow["category"], string> = {
+  gmo_food: GMO_CONSTRAINT_NOTICE,
+  oral_care: FLUORIDE_CONSTRAINT_NOTICE,
+}
 
 // `products.confidence_tier` is a verdict_tier (includes 'none'); the engine
 // surface only has low/medium/high. Stored rows with no confidence degrade to
@@ -47,6 +53,7 @@ export function productToEngineResult(
   matchedBy: IdentityMatch
 ): EngineResult {
   const confidenceTier = normalizeConfidenceTier(product.confidence_tier)
+  const constraintNotice = CONSTRAINT_NOTICE_BY_CATEGORY[product.category]
   const confidenceFactor =
     matchedBy === "barcode"
       ? "Stored verified verdict — barcode matched the verified product dataset"
@@ -67,8 +74,8 @@ export function productToEngineResult(
       factors: [confidenceFactor],
     },
     matchedTerms: parseMatchedTerms(product.matched_terms),
-    guidance: product.guidance_text || GMO_CONSTRAINT_NOTICE,
-    constraintNotice: GMO_CONSTRAINT_NOTICE,
+    guidance: product.guidance_text || constraintNotice,
+    constraintNotice,
     computedAt: new Date().toISOString(),
     configVersion: product.config_version,
   }

@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest"
-import { config } from "../../data/fluoride_lookup_config_v1.3"
-import type { Engine, EngineResult, ResultTier } from "./types"
+import config from "../../data/fluoride_lookup_config_v1.3.json"
+import type { EngineContext, EngineResult, ResultTier } from "./types"
 import { fluorideEngine, FLUORIDE_CONSTRAINT_NOTICE } from "./fluorideEngine"
 import { readFileSync } from "node:fs"
 
-const ctx = (overrides: Partial<Engine["context"]> = {}) =>
+type PpmTableRow = { tier: string; ppm_range: number[]; verdict: string; guidance?: string }
+type SubcategoryTables = Record<string, PpmTableRow[]>
+
+const ctx = (overrides: Partial<EngineContext> = {}) =>
   ({
     ocrMeanConfidence: 0.93,
     isTruncated: false,
@@ -12,10 +15,10 @@ const ctx = (overrides: Partial<Engine["context"]> = {}) =>
     category: "oral_care",
     subcategory: "toothpaste_gel",
     ...overrides,
-  }) as Engine["context"]
+  }) as EngineContext
 
 function tierRowFor(subcategory: string, ppm: number) {
-  const table = config.category_ppm_tables[subcategory]
+  const table = (config.category_ppm_tables as SubcategoryTables)[subcategory]
   const row = table.find((r) => ppm >= r.ppm_range[0] && ppm <= r.ppm_range[1])
   if (!row) throw new Error(`no row for ppm ${ppm} in ${subcategory}`)
   return row

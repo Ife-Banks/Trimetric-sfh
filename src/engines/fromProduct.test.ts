@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { productToEngineResult } from "./fromProduct"
+import { GMO_CONSTRAINT_NOTICE } from "./gmoEngine"
+import { FLUORIDE_CONSTRAINT_NOTICE } from "./fluorideEngine"
 import type { ProductRow } from "@/lib/identification/productIdentification"
 
 function sampleProduct(overrides: Partial<ProductRow> = {}): ProductRow {
@@ -19,6 +21,26 @@ function sampleProduct(overrides: Partial<ProductRow> = {}): ProductRow {
     ],
     guidance_text: "Custom guidance from an admin.",
     config_version: "v1.0",
+    ...overrides,
+  }
+}
+
+function sampleOralCareProduct(overrides: Partial<ProductRow> = {}): ProductRow {
+  return {
+    ...sampleProduct(),
+    barcode: "4005800000001",
+    name: "Fluoride Daily Toothpaste",
+    brand: "Colgate",
+    category: "oral_care",
+    subcategory: "toothpaste_gel",
+    ingredients_text: "Sodium Fluoride 1350 ppm",
+    result_tier: "medium",
+    result_label: "Standard Fluoride Content",
+    confidence_tier: "high",
+    matched_terms: [
+      { term: "sodium fluoride", normalized: "Sodium Fluoride", kind: "active_compound" },
+    ],
+    config_version: "v1.3",
     ...overrides,
   }
 }
@@ -54,6 +76,19 @@ describe("productToEngineResult — FR-6 stored verdict mapping", () => {
     const result = productToEngineResult(sampleProduct({ guidance_text: null }), "barcode")
     expect(result.guidance).toContain("cannot confirm GMO content")
     expect(result.constraintNotice).toBe(result.guidance)
+  })
+
+  it("uses the fluoride constraint notice for oral_care products", () => {
+    const result = productToEngineResult(sampleOralCareProduct(), "barcode")
+    expect(result.category).toBe("oral_care")
+    expect(result.constraintNotice).toBe(FLUORIDE_CONSTRAINT_NOTICE)
+    expect(result.constraintNotice).not.toBe(GMO_CONSTRAINT_NOTICE)
+  })
+
+  it("falls back to the fluoride constraint notice when guidance_text is missing on oral_care", () => {
+    const result = productToEngineResult(sampleOralCareProduct({ guidance_text: null }), "barcode")
+    expect(result.guidance).toBe(FLUORIDE_CONSTRAINT_NOTICE)
+    expect(result.constraintNotice).toBe(FLUORIDE_CONSTRAINT_NOTICE)
   })
 
   it("normalizes a 'none' confidence tier down to low without throwing", () => {

@@ -17,8 +17,9 @@ import type { Engine, EngineContext, EngineResult, EngineTerm, ResultTier } from
 
 export const FLUORIDE_CONSTRAINT_NOTICE =
   "This reports the fluoride level printed on the label or estimated from " +
-  "the listed compounds. It cannot confirm the actual fluoride content — " +
-  "only lab testing can."
+  "the listed compounds. It is information only — it cannot confirm the " +
+  "actual fluoride content, and it is not a medical recommendation. Only " +
+  "lab testing can."
 
 // ---------------------------------------------------------------------------
 // Normalization — same convention as gmoEngine
@@ -66,7 +67,7 @@ function classify(subcat: string, ppm: number): {
   row: { verdict: string; guidance?: string }
   label: string
 } {
-  const table = config.category_ppm_tables[subcat]
+  const table = (config.category_ppm_tables as Record<string, Array<{ ppm_range: number[]; verdict: string; guidance?: string }>>)[subcat]
   if (!table) throw new Error(`unknown subcategory in config: ${subcat}`)
   const row = table.find((r) => ppm >= r.ppm_range[0] && ppm <= r.ppm_range[1])
   if (!row) return { tier: "none", label: "Unclassified", row: { verdict: "Unclassified" } }
@@ -79,6 +80,54 @@ function classify(subcat: string, ppm: number): {
         ? "medium"
         : "high"
   return { tier, label: verdict, row }
+}
+
+// ---------------------------------------------------------------------------
+// Compound matching (§4) — scan the normalized text for each compound in the
+// config terms table (label order), extract an adjacent percentage/ppm number,
+// and fall back to the compound's default ppm when no number is present.
+// ---------------------------------------------------------------------------
+
+interface Match {
+  term: EngineTerm
+  ppm: number
+  defaultPpm: boolean
+}
+
+function extractMatches(fullText: string): Match[] {
+  const matches: Match[] = []
+  for (const row of config.terms_lookup_table) {
+    if (!row.regex_pattern) continue
+    const re = new RegExp(row.regex_pattern, "i")
+    const found = re.exec(fullText)
+    if (!found) continue
+
+    const after = fullText.slice(found.index + found[0].length, found.index + found[0].length + 60)
+    const concentration = /(\d+(?:\.\d+)?)\s*(%|ppm)/i.exec(after)
+
+    let ppm: number
+    let defaultPpm: boolean
+    if (concentration && typeof row.ppm_multiplier === "number") {
+      const value = Number(concentration[1])
+      const unit = concentration[2].toLowerCase()
+      ppm = unit === "%" ? value * row.ppm_multiplier : value
+      defaultPpm = false
+    } else {
+      ppm = row.default_ppm ?? 0
+      defaultPpm = true
+    }
+
+    matches.push({
+      term: {
+        term: found[0],
+        normalized: row.normalized_term,
+        kind: "active_compound",
+      },
+      ppm,
+      defaultPpm,
+    })
+  }
+  return matches
 }
 
 // ---------------------------------------------------------------------------
