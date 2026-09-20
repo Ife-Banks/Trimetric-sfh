@@ -56,6 +56,15 @@ function classifyToken(token: string): Classification {
       }
     }
   }
+  // Spec-mandated catch-all (GMO_Build_Guide §3.3): any unspecified
+  // "vegetable [X]" term is ambiguous. Enforced as a pattern, not a fixed
+  // phrase, because the space of real labels is open-ended ("vegetable
+  // margarine", "hydrogenated vegetable fats", "edible vegetables oil").
+  // Explicit aliases that contain the word (e.g. "textured vegetable protein"
+  // → soy) matched above and take precedence.
+  if (/\bvegetable/i.test(token)) {
+    return { kind: "ambiguous", family: null }
+  }
   for (const entry of config.ambiguous_derivative_matches.entries) {
     if (token.includes(entry.ingredient.toLowerCase())) {
       return { kind: "ambiguous", family: null }
@@ -91,7 +100,10 @@ function scoreConfidence(
     factors.push("Ingredient list completeness — list appears truncated")
   }
 
-  // Product identification (+2, barcode only)
+  // Product identification (+2, barcode only). Shared rule across both engines:
+  // an exact barcode match confirms identity (+2); a fuzzy name match is
+  // recorded as a factor but earns no points — it narrows identity, it does
+  // not confirm it. `none` earns nothing.
   if (ctx.identityMatch === "barcode") {
     points += 2
     factors.push("Product identification — barcode matched an Open Food Facts entry")
@@ -101,14 +113,16 @@ function scoreConfidence(
     factors.push("Product identification — none")
   }
 
-  // Lookup match rate (+1), only meaningful once an explicit crop is found
-  if (explicitCropCount >= 1 && recognizedRatio >= 0.8) {
+  // Lookup match rate (+1) — based on the recognition rate alone, independent
+  // of whether an explicit crop was found.
+  if (recognizedRatio >= 0.8) {
     points += 1
     factors.push("Lookup match rate — ≥80% of extracted ingredients recognized")
   }
 
-  // Certification clarity (+1), only on a full, non-truncated read with a real crop signal
-  if (!ctx.isTruncated && explicitCropCount >= 1) {
+  // Certification clarity (+1) — based on OCR completeness alone: a full,
+  // non-truncated read is informative whether or not a crop was found.
+  if (!ctx.isTruncated) {
     points += 1
     factors.push("Certification clarity — cert statement clearly readable either way")
   }

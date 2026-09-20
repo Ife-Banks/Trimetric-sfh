@@ -181,13 +181,13 @@ export const fluorideEngine: Engine = (ingredientsText, ctx) => {
 
   // Confidence scoring (§7):
   //  - Ingredient list completeness (+2)         if !ctx.isTruncated
-  //  - Product identification (+2)               if identityMatch !== "none"
+  //  - Product identification (+2)               barcode match only
   //  - Lookup match rate (+1)                    if any compound matched
   //  - Concentration clarity (+1)                if a number was adjacent
   // Totals: 4–5 High, 2–3 Medium, 0–1 Low.
   // NOTE: a default-ppm fallback (no adjacent number) is UNCONDITIONALLY
-  // capped at Medium per build-guide §5.4 + §7 — name + full list + ≥80%
-  // lookup is 5 points, but the missing concentration withholds High.
+  // capped at 3 points (Medium) — it can never reach High, even with a full
+  // list and a barcode match. A missing concentration always withholds High.
   let points = 0
   const factors: string[] = []
 
@@ -198,9 +198,13 @@ export const fluorideEngine: Engine = (ingredientsText, ctx) => {
     factors.push("Ingredient list completeness — list appears truncated")
   }
 
-  if (ctx.identityMatch !== "none") {
+  // Shared rule across both engines: an exact barcode match confirms identity
+  // (+2); a fuzzy name match is recorded but earns no points; `none` earns none.
+  if (ctx.identityMatch === "barcode") {
     points += 2
-    factors.push("Product identification — barcode/name matched the verified dataset")
+    factors.push("Product identification — barcode matched the verified dataset")
+  } else if (ctx.identityMatch === "name") {
+    factors.push("Product identification — name match, no barcode confirmation")
   } else {
     factors.push("Product identification — no identity match")
   }
@@ -217,7 +221,7 @@ export const fluorideEngine: Engine = (ingredientsText, ctx) => {
     factors.push("Concentration clarity — no number found; fell back to config default ppm")
   }
 
-  const total = primary.defaultPpm ? Math.min(points, 4) : points
+  const total = primary.defaultPpm ? Math.min(points, 3) : points
   const confTier = total >= 4 ? "high" : total >= 2 ? "medium" : "low"
 
   const { tier, label, row } = classify(subcategory, primary.ppm)

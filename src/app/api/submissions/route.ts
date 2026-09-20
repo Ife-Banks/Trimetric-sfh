@@ -1,6 +1,6 @@
 import "server-only"
 
-import { getServerSupabase } from "@/lib/supabase/server"
+import { getServerSupabase, getUserServerSupabase } from "@/lib/supabase/server"
 import { createRateLimiter } from "@/lib/rateLimit"
 import { SUBMISSION_RATE_LIMIT, submissionPayloadSchema } from "@/lib/validation/schemas"
 
@@ -69,7 +69,13 @@ export async function POST(request: Request) {
     )
   }
 
-  const supabase = getServerSupabase()
+  const supabase = await getUserServerSupabase()
+
+  // Signed-in users get their submissions attributed (history page). Anonymous
+  // users remain fully supported — submitted_by stays NULL.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // NOTE: no `.select().single()` here — that would emit `INSERT ... RETURNING`,
   // and returning the row back to an anonymous client would be denied by the
@@ -89,6 +95,7 @@ export async function POST(request: Request) {
       ocr_confidence: payload.ocrConfidence ?? null,
       engine_preview: payload.enginePreview,
       submitter_fingerprint: payload.fingerprint,
+      submitted_by: user?.id ?? null,
     })
 
   if (error) {

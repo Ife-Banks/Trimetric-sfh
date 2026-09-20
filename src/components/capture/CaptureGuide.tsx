@@ -1,6 +1,7 @@
 "use client";
 
 import type { FacingMode } from "./CameraView";
+import { Badge } from "@/components/ui/badge";
 
 interface CaptureGuideProps {
   step: FacingMode;
@@ -24,19 +25,12 @@ export function CaptureGuide({ step }: CaptureGuideProps) {
     <div className="mb-4">
       <div className="flex gap-2">
         {STEPS.map((s) => (
-          <span
-            key={s.key}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              s.key === step
-                ? "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-                : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
-            }`}
-          >
+          <Badge key={s.key} variant={s.key === step ? "default" : "secondary"}>
             {s.label}
-          </span>
+          </Badge>
         ))}
       </div>
-      <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mt-3 text-sm text-muted-foreground">
         {STEPS.find((s) => s.key === step)?.detail}
       </p>
     </div>

@@ -8,8 +8,12 @@
 // → ConstraintNotice (never dismissible) → submission CTA/form.
 
 import { useState } from "react"
+import { ImageIcon } from "lucide-react"
 import type { EngineResult } from "@/engines/types"
 import type { IdentityMatch } from "@/lib/identification/productIdentification"
+import { Button } from "@/components/ui/button"
+import { Panel } from "@/components/ui/panel"
+import { InlineAlert } from "@/components/ui/inline-alert"
 import { ResultBadge } from "./ResultBadge"
 import { ConfidenceBadge } from "./ConfidenceBadge"
 import { MatchedTermsList } from "./MatchedTermsList"
@@ -44,6 +48,7 @@ export function VerdictScreen({
   ingredientsText?: string
 }) {
   const [formOpen, setFormOpen] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const lowConfidence = result.confidence.tier === "low"
 
   const prefill: SubmissionPrefill = {
@@ -61,18 +66,20 @@ export function VerdictScreen({
           <img
             src={identity.imageUrl}
             alt={`Photo of ${identity.name}`}
-            className="h-20 w-20 shrink-0 rounded-xl border border-zinc-200 object-cover dark:border-zinc-800"
+            className="h-20 w-20 shrink-0 rounded-xl border object-cover"
           />
         ) : (
-          <div className="h-20 w-20 shrink-0 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700" />
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-dashed">
+            <ImageIcon className="h-7 w-7 text-muted-foreground/60" aria-hidden="true" />
+          </div>
         )}
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold">{identity.name || "Unidentified product"}</h2>
-          {identity.brand && <p className="text-sm text-zinc-500 dark:text-zinc-400">{identity.brand}</p>}
+          <h2 className="truncate text-lg font-semibold tracking-tight">{identity.name || "Unidentified product"}</h2>
+          {identity.brand && <p className="text-sm text-muted-foreground">{identity.brand}</p>}
           {identity.barcode && (
-            <p className="text-xs text-zinc-400 dark:text-zinc-500">Barcode {identity.barcode}</p>
+            <p className="text-xs text-muted-foreground">Barcode {identity.barcode}</p>
           )}
-          <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">{MATCH_NOTE[identity.matchedBy]}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{MATCH_NOTE[identity.matchedBy]}</p>
         </div>
       </header>
 
@@ -82,42 +89,45 @@ export function VerdictScreen({
         <ConfidenceBadge tier={result.confidence.tier} factors={result.confidence.factors} />
       </div>
 
-      <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{result.guidance}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{result.guidance}</p>
 
-      <div className="rounded-2xl border border-zinc-200 p-4 dark:border-zinc-800">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <Panel variant="hairline">
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           What was found
         </h3>
         <MatchedTermsList terms={result.matchedTerms} />
-      </div>
+      </Panel>
 
       <ConstraintNotice notice={result.constraintNotice} />
 
       <div className="pt-1">
-        {formOpen ? (
+        {submitted ? (
+          <InlineAlert variant="success">
+            <p className="font-semibold">Correction submitted</p>
+            <p className="mt-0.5">
+              A reviewer will look at your correction. If it&apos;s approved it enters the verified
+              dataset and future scans of this product get a high-confidence verdict.
+            </p>
+          </InlineAlert>
+        ) : formOpen ? (
           <SubmissionForm
             result={result}
             prefill={prefill}
             photo={photo ?? null}
             ocrConfidence={ocrConfidence}
-            onSuccess={() => setFormOpen(false)}
+            onSuccess={() => {
+              setSubmitted(true)
+              setFormOpen(false)
+            }}
           />
         ) : lowConfidence ? (
-          <button
-            type="button"
-            onClick={() => setFormOpen(true)}
-            className="h-12 w-full rounded-full bg-zinc-900 text-base font-medium text-zinc-50 transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
+          <Button type="button" size="lg" className="w-full" onClick={() => setFormOpen(true)}>
             Verify this with a human — submit a correction
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={() => setFormOpen(true)}
-            className="w-full rounded-full border border-zinc-300 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
+          <Button type="button" variant="outline" onClick={() => setFormOpen(true)}>
             Something look wrong? Submit a correction
-          </button>
+          </Button>
         )}
       </div>
     </div>

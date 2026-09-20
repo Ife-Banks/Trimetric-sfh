@@ -1,6 +1,7 @@
 import { getUserServerSupabase } from "@/lib/supabase/server"
 import type { SubmissionForReview } from "@/lib/admin/recompute"
 import { ReviewQueue, type QueueCategory } from "@/components/admin/ReviewQueue"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 // Admin data is request-time and must never be cached or prerendered.
 export const dynamic = "force-dynamic"
@@ -43,10 +44,11 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
 
   if (error) {
     return (
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/60 dark:text-red-300">
-          Could not load the queue: {error.message}
-        </p>
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 outline-none">
+        <Alert variant="destructive">
+          <AlertTitle>Could not load the queue</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
       </main>
     )
   }

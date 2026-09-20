@@ -1,6 +1,6 @@
 # GMO Lookup Dataset — QA Review & Cleanup
 
-**Reviewed:** `gmo_lookup_data_set.xlsx` (301 rows) + `gmo_lookup data set explanation.docx`
+**Reviewed:** `archive/gmo_lookup_data_set.xlsx` (301 rows) + `archive/gmo_lookup data set explanation.docx`
 **Verdict:** Conceptually correct and well-aligned with the spec. **Not dev-ready as delivered** — five mechanical issues, all fixed. Cleaned files attached.
 
 ---
@@ -126,3 +126,10 @@ Before handing to the coding agent:
 3. Add the two engine-level rules from §4 to the GMO engine's unit tests — both are easy to get wrong and invisible until a real product exposes them
 
 Everything else in the existing build docs stands unchanged.
+
+---
+
+## 7. Known open issues
+
+- **Gala Sausage Roll seed row:** stored result `low` vs engine recompute `medium` (`soya 1.0%` matches the explicit `soy` alias). Not yet investigated — is a 1% trace amount meant to count the same as a bulk ingredient? No concentration threshold currently exists in the matching logic.
+

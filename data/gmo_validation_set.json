@@ -1,0 +1,870 @@
+[
+  {
+    "productName": "EZEKIEL 4:9 FLOURLESS SPROUTED GRAIN BREAD",
+    "brand": "Food For Life",
+    "barcode": "0073472001202",
+    "category": "cereals",
+    "ingredientsText": "organic sprouted wheat, filtered water, organic sprouted barley, organic sprouted millet, organic malted barley, organic sprouted lentils, organic sprouted soybeans, organic sprouted spelt, fresh yeast,organic wheat gluten, sea salt.",
+    "expectedTokens": [
+      "Organic Sprouted Soybeans"
+    ],
+    "certification": "USDA Organic, Non GMO Verified."
+  },
+  {
+    "productName": "Dashi Miso",
+    "brand": "Miko Brand",
+    "barcode": "0074410278793",
+    "category": "cereals",
+    "ingredientsText": "Water, soybean, rice malt, salt, bonito extract, bonito powder, kelp extract, alcohol ( to preserve freshness), monosodium glutamate, disodium inosinate, disodium guanylate, riboflavin.",
+    "expectedTokens": [
+      "soybeans"
+    ],
+    "certification": "Non GMO"
+  },
+  {
+    "productName": "Pure Vegetable oil",
+    "brand": "Long Life",
+    "barcode": "0859872000485",
+    "category": "Vegetable Oil",
+    "ingredientsText": "all-vegetable-soybean-oil: 100.0% (estimate)",
+    "expectedTokens": [
+      "Vegetable soybeans oil"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Oddlygood Wicked vanilla soygurt",
+    "brand": "Oddlygood",
+    "barcode": "6430081490201",
+    "category": "Diary substitutes",
+    "ingredientsText": "Water, 9% peeled soybeans (North-America), sugar, polydextrose (dietary fibre), sugarcane, modified starch, vitamins (D2, riboflavin (B2), B12, folic acid), calcium, aromas, stabiliser (pectin), salt, ground vanilla pod, acidity regulator (citric acid), preservative (potassium sorbate), starter.",
+    "expectedTokens": [
+      "peeled soybeans",
+      "sugarcane"
+    ],
+    "certification": "vegetarian"
+  },
+  {
+    "productName": "Soy Curls",
+    "brand": "Butler Foods Llc",
+    "barcode": "0850501000012",
+    "category": "Foods and Beverages",
+    "ingredientsText": "whole-non-gmo-soy-beans: 100.0%",
+    "expectedTokens": [
+      "soybeans"
+    ],
+    "certification": "Non GMO Verified"
+  },
+  {
+    "productName": "Gemini",
+    "brand": "Cargill",
+    "barcode": "8906006330269",
+    "category": "Foods and Beverages",
+    "ingredientsText": "Refined Soyabean Oil, Antioxidant (INS 319), Vitamins (A, D), Antifoaming Agent (INS 900a) Saturated Fatty Acids may vary by Season, Region, Seed, Crop etc. DE",
+    "expectedTokens": [
+      "Refined Soyabean oil"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Tomate",
+    "brand": "Solis",
+    "barcode": "8445290615350",
+    "category": "Tomato Sauces",
+    "ingredientsText": "Tomato, tomato concentrate, water, non-hydrogenated sunflower oil, sugar, modified corn starch, salt, natural onion flavor, onion, garlic, white pepper",
+    "expectedTokens": [
+      "modified cornstarch"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Pavot Citron",
+    "brand": "Gerblé",
+    "barcode": "3175681066632",
+    "category": "Biscuits and Cakes",
+    "ingredientsText": "wheat flour: 48.8%, unrefined sugar: 14.2%, colza oil: 14.0%,whole wheat flour: 11.0%,wheat germ: 5.6% blue poppy seed: 5.0%, vegetable fiber: < 2%, E322: < 2%, lemon: 0.9% concentrated lemon juice: < 2%, corn starch: < 2%, Magnesium: < 2%, sugar: < 2% , E500: < 2%, natural lemon flavouring: < 2%, vitamins: < 2%, vitamin D: < 2%,Thiamin: < 2%, folic acid: < 2%",
+    "expectedTokens": [
+      "Corn starch"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "MAESTRO CLASSIC",
+    "brand": "Schär",
+    "barcode": "8008698005576",
+    "category": "Slice Bread",
+    "ingredientsText": "corn starch, water, sourdough 16% (rice flour, water), rice starch, plant fiber (psyllium), rice syrup, sunflower oil, soy protein, thickener: hydroxypropyl methylcellulose, millet flour 1,9%, quinoa flour 1,3%, yeast, honey, iodized salt (salt, potassium iodide), may contain traces of lupin and mustard, lactose-free, wheat-free",
+    "expectedTokens": [
+      "corn starch",
+      "rice flour",
+      "rice starch",
+      "rice syrup",
+      "soy protein"
+    ],
+    "certification": "Vegetarian"
+  },
+  {
+    "productName": "Chocao",
+    "brand": "Chocao",
+    "barcode": "6111180007339",
+    "category": "Cocoa and Chocolate powder",
+    "ingredientsText": "sugar: 59.0%, cocoa powder: 25.0%, corn starch: 8.4%, E412: 4.8%, flavouring: 3.0%, vanilla flavouring: 3.0%, chocolate: < 2%",
+    "expectedTokens": [
+      "corn starch"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Capri choco",
+    "brand": "Excelo",
+    "barcode": "6111249960964",
+    "category": "Biscuits and Cakes",
+    "ingredientsText": "Sugar, Hydrogenated vegetable fats (Palm), Soft wheat flour, cocoa powder (10%), Hazelnut paste, Cocoa mass, Milk permeate powder, Dextrose, Raising powders: (Sodium bicarbonate, sodium acid pyrophosphate), Native corn starch, vegetable emulsifier (soya lecithin), Salt. Contains wheat (cereals containing gluten), soya, milk, and hazelnut. May contain: Eggs & Peanuts.",
+    "expectedTokens": [
+      "hydrogenated vegetable fats",
+      "Native corn starch",
+      "vegetable emulsifier(soya lecithin)",
+      "soya."
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Nooco",
+    "brand": "Nooco",
+    "barcode": "6111270961442",
+    "category": "Bishop and Cakes",
+    "ingredientsText": "whey powder: < 2%, Emulsifier: < 2%, soya lecithin: < 2%, salt: < 2%, vanillin: < 2%, biscuit: 48.0%, wheat flour: < 2%, sugar: < 2%, beurre laitier: < 2%, palm fat: < 2%, skimmed milk powder: < 2%,, corn starch: < 2%, salt: < 2%, Emulsifier: < 2%, soya lecithin: < 2%, agents-levants-conate-de-sodium: < 2%",
+    "expectedTokens": [
+      "soya lecithin",
+      "corn starch"
+    ],
+    "certification": "Organic"
+  },
+  {
+    "productName": "Nutella",
+    "brand": "FERRERO FRANCE COMMERCIALE",
+    "barcode": "3017620425035",
+    "category": "Cocoa and hazelnuts spreads",
+    "ingredientsText": "sugar: 51.0%, palm oil: 17.1%,hazelnut: 13.0%, skimmed milk powder: 8.7%, fat reduced cocoa: 7.4%, E322: 5.3%, soya lecithin: 5.3%, vanillin: < 2%",
+    "expectedTokens": [
+      "soya lecithin"
+    ],
+    "certification": "Vegetarian"
+  },
+  {
+    "productName": "Crunchy Avoine & Chocolat Noir",
+    "brand": "Nature Valley",
+    "barcode": "8410076601148",
+    "category": "Chocolate cereal bars",
+    "ingredientsText": "wholemeal oats (55%), sugar, sunflower oil, dark chocolate chips (8%) (cocoa paste, sugar, emulsifier: soy lecithin, natural vanilla flavor), lean cocoa powder, honey, salt, molasses, emulsifier: sunflower lecithin, lifting powder: sodium bicarbonate, natural flavor",
+    "expectedTokens": [
+      "soy lecithin"
+    ],
+    "certification": "Vegetarian"
+  },
+  {
+    "productName": "margarine",
+    "brand": "la Prairie",
+    "barcode": "6111203001467",
+    "category": "Margarines",
+    "ingredientsText": null,
+    "expectedTokens": [],
+    "certification": null
+  },
+  {
+    "productName": "Original",
+    "brand": "Sun Chips",
+    "barcode": "0028400147415",
+    "category": "Biscuits and crackers",
+    "ingredientsText": "WHOLE CORN, SUNFLOWER OIL, CANOLA OIL, WHOLE WHEAT, BROWN RICE FLOUR, WHOLE OAT FLOUR, SUGAR, SALT.",
+    "expectedTokens": [
+      "whole corn",
+      "canola oil",
+      "brown rice flour"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Star tomat sachy",
+    "brand": "Frito",
+    "barcode": "6111184009834",
+    "category": "Tomatoes",
+    "ingredientsText": "water: 56.9%,conce: 17.5%, sugar: 8.8%, soya oil: 5.4%, épaississ: 3.7%, flavouring: 2.1%",
+    "expectedTokens": [
+      "soya oil"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Sour Cream & Onion",
+    "brand": "Pringles",
+    "barcode": "5053990155354",
+    "category": "Cereals and potatoes",
+    "ingredientsText": "Dehydrated potatoes, vegetable oils (sunflower, palm, corn) in varying proportions, wheat flour, corn flour, rice flour, sour cream & onion seasoning (onion powder, wheat starch, maltodextrin, flavour enhancers {monosodium glutamate, disodium guanylate, disodium inosinate), dextrose, sunflower oil, salt, flavourings (milk), sugar, sour cream powder (milk), modified maize starch, sweet whey powder (milk), glucose syrup, acids (citric acid, lactic acid, malic acid), milk proteins), maltodextrin, emulsifier (E471), salt, colour (annatto norbixin).",
+    "expectedTokens": [
+      "dehydrated potatoes",
+      "vegetable oils(corn)",
+      "rice flour",
+      "corn flour"
+    ],
+    "certification": "Vegetarian"
+  },
+  {
+    "productName": "Pringles Paprika",
+    "brand": "Pringles",
+    "barcode": "5053990161607",
+    "category": "Cereals and potatoes",
+    "ingredientsText": "Dehydrated potatoes, vegetable oils (sunflower, corn), rice flour, WHEAT STARCH, corn flour, paprika seasoning (sugar, paprika powder, flavor enhancers, yeast powder, dextrose, onion powder, granulated bouillon salt (vegetable salt), protein ), garlic powder, color, food acid, chili extract), emulsifier (E471), maltodextrin, salt, colorant (annatto)",
+    "expectedTokens": [
+      "food acid",
+      "dehydrated potatoes"
+    ],
+    "certification": "Vegetarian"
+  },
+  {
+    "productName": "Original Lightly Salted",
+    "brand": "Pringles",
+    "barcode": "0038000138812",
+    "category": "Cereals and potatoes",
+    "ingredientsText": "DRIED POTATOES, VEGETABLE OIL (CORN, COTTONSEED, SOYBEAN, AND/OR SUNFLOWER OIL), CORN FLOUR, CORNSTARCH, RICE FLOUR, MALTODEXTRIN, MONO - AND DIGLYCERIDES, SALT, WHEAT STARCH.",
+    "expectedTokens": [
+      "dried potatoes",
+      "vegetable oil (corn, soybean, cottonseed)",
+      "corn starch",
+      "corn flour"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Gnocchi à Poêler",
+    "brand": "Lustucru",
+    "barcode": "3240931548111",
+    "category": "Plant-based foods and beverages",
+    "ingredientsText": "water: 41.0%, mashed potato: 6.2%, spice: 4.8%, turmeric: 4.8% wheat semolina: 45.0%, oil: < 2%, colza oil: < 2%, sunflower oil: < 2%, salt: < 2%,wheat flour: < 2%",
+    "expectedTokens": [
+      "mashed potato"
+    ],
+    "certification": "Vegetarian"
+  },
+  {
+    "productName": "Original",
+    "brand": "Pringles",
+    "barcode": "5053990156009",
+    "category": "Plant-based foods and beverages",
+    "ingredientsText": "potato: 29.2%, vegetable oil: 29.2%, sunflower oil: 29.2%, palm oil: < 2%, corn: < 2%, wheat flour: 29.2%, corn flour: 18.8%, rice flour: 18.8%, maltodextrin: < 2%, E471: < 2%, salt: < 2%, E160b: < 2%",
+    "expectedTokens": [
+      "potato",
+      "vegetable oil",
+      "corn",
+      "corn flour",
+      "maltodextrin"
+    ],
+    "certification": "Halal"
+  },
+  {
+    "productName": "Chips chili",
+    "brand": "chili",
+    "barcode": "6111242040823",
+    "category": "Plant-based foods and beverages",
+    "ingredientsText": "potato: 74.6%, vegetable oil: 12.7%, salt: 12.7%",
+    "expectedTokens": [
+      "potato",
+      "vegetable oil"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Vegetable and roast chicken soup",
+    "brand": "Yorkshire Provender",
+    "barcode": "5056053308742",
+    "category": "Chicken soups",
+    "ingredientsText": "Vegetables (49%) (potato, carrot, onion, savoy cabbage, broccoli, leek, celeriac (celery), parsnip, celery), water, chicken (5%) (roast chicken, chicken), roast chicken stock [water, roast chicken, yeast extract, salt, potato flake, chicken fat (chicken)], double cream (milk), vegetable bouillon [salt, potato starch, dried vegetables (celeriac (celery), onion, garlic, tomato), spices (celery, turmeric, black pepper, mace, n$utmeg), herbs (lovage, parsley)], unsalted butter (milk), garlic purée, fresh Yorkshire parsley, thyme, black pepper, salt",
+    "expectedTokens": [
+      "potato",
+      "potato flake",
+      "potato starch"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Wraps",
+    "brand": "Schär",
+    "barcode": "8008698011683",
+    "category": "Plant-based foods and beverages",
+    "ingredientsText": "rice flour, water, vegetable margarine (palm fat, water, canola oil, salt, emulsifier: mono - and diglycerides of fatty acids, acid: citric acid, natural flavour), humectant: sorbitol, vegetable fibre (psyllium), soya protein, rice starch, thickeners: guar gum, carob seed flour, salt, acid: tartaric acid, preservative: potassium sorbate",
+    "expectedTokens": [
+      "rice flour",
+      "vegetable margarine",
+      "citric acid",
+      "natural flavors",
+      "sorbitol",
+      "soya protein"
+    ],
+    "certification": "No gluton"
+  },
+  {
+    "productName": "Lay's Potato Chips",
+    "brand": "Lay's",
+    "barcode": "8901491101844",
+    "category": "Plant-based foods and beverages",
+    "ingredientsText": "potato, edible vegetable oil (sunflower oil, corn oil, and/or canola oil), spices and condiments (onion powder, chilli powder, dry mango powder, coriander powder, ginger powder, garlic powder, black pepper powder, turmeric powder, cumin powder, salt, black salt, sugar, tomato powder, citric acid, tartaric acid, natural flavors.",
+    "expectedTokens": [
+      "potato",
+      "edible vegetables oil",
+      "citric acid",
+      "natural flavors"
+    ],
+    "certification": "Green Dot India"
+  },
+  {
+    "productName": "Honey Maid Grahams",
+    "brand": "Honey Maid",
+    "barcode": "0044000004637",
+    "category": "Biscuits and cakes",
+    "ingredientsText": "UNBLEACHED ENRICHED FLOUR (WHEAT FLOUR, NIACIN, REDUCED IRON, THIAMINE MONONITRATE (VITAMIN B1), RIBOFLAVIN (VITAMIN B2), FOLIC ACID), GRAHAM FLOUR (WHOLE GRAIN WHEAT FLOUR), SUGAR, SOYBEAN AND/OR CANOLA OIL, HONEY, LEAVENING (BAKING SODA, CALCIUM PHOSPHATE), SALT, SOY LECITHIN, ARTIFICIAL FLAVOR, WHEAT, SOY.",
+    "expectedTokens": [
+      "soybean",
+      "canola oil",
+      "soy lecithin",
+      "artificial flavor",
+      "soy"
+    ],
+    "certification": "Orthodox Union Kosher"
+  },
+  {
+    "productName": "Mayonnaise –",
+    "brand": "Hellmann's",
+    "barcode": "0068400662600",
+    "category": "Mayonnaises",
+    "ingredientsText": "Canola oil, water, liquid whole egg, vinegar, liquid egg yolk, salt, sugar, spice, concentrated lemon juice, calcium disodium EDTA.",
+    "expectedTokens": [
+      "canola oil"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Burger Soja",
+    "brand": "Garden gourmet",
+    "barcode": "7613037397956",
+    "category": "Meat alternatives",
+    "ingredientsText": "water, concentrated soy protein (18,5%), vegetable oils (colza, coconut), natural aromas, wheat gluten, stabilizer: methyl cellulose, alcohol vinegar, fruit and vegetable concentrate (betterave, carrot, pepper, blackcurrant), salt, barley malt extract, ',gmo-free",
+    "expectedTokens": [
+      "concentrated soy protein",
+      "vegetables oils",
+      "methyl cellulose"
+    ],
+    "certification": "Non Gmo"
+  },
+  {
+    "productName": "Pomme • Appel",
+    "brand": "Classic",
+    "barcode": "3245414620131",
+    "category": "Plant-based foods and beverages",
+    "ingredientsText": "apple puree 98.5%, concentrated apple juice 1.4%, antioxidant: ascorbic acid, acidifier: citric acid",
+    "expectedTokens": [
+      "apple puree",
+      "concentrated apple juice",
+      "citric acid"
+    ],
+    "certification": "Green Dot"
+  },
+  {
+    "productName": "APPLE CIDER VINEGAR –",
+    "brand": "BRAGG",
+    "barcode": "0074305001161",
+    "category": "Groceries",
+    "ingredientsText": "ORGANIC APPLE CIDER VINEGAR, WATER.",
+    "expectedTokens": [
+      "organic apple cider"
+    ],
+    "certification": "Non GMO Verified, USDA Organic"
+  },
+  {
+    "productName": "Salmón marinado",
+    "brand": "Hacendado",
+    "barcode": "8480000534460",
+    "category": "seafood",
+    "ingredientsText": "salmon: 59.9%, salt: 18.4%, natural flavouring: 9.2%, vinegar, dill: 3.9%, spice: 2.9%",
+    "expectedTokens": [
+      "salmon"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Red Salmon –",
+    "brand": "The Fishmonger",
+    "barcode": "4088600215297",
+    "category": "Seafood",
+    "ingredientsText": "RED SALMON (Oncorhynchus nerka) (99%) (Fish), Salt",
+    "expectedTokens": [
+      "Red salmon or oncorhynchus nerka"
+    ],
+    "certification": "Sustainable fishery"
+  },
+  {
+    "productName": "Wild salmon fillets",
+    "brand": "Sainsbury's",
+    "barcode": null,
+    "category": "Seafood",
+    "ingredientsText": "pink salmon (oncorhynchus gorbuscha)",
+    "expectedTokens": [
+      "pink salmon or oncorhynchus gorbuscha"
+    ],
+    "certification": "Sustainable fishery"
+  },
+  {
+    "productName": "Smoked Salmon –",
+    "brand": "Kirkland Signature",
+    "barcode": "0096619256976",
+    "category": "Seafood",
+    "ingredientsText": "smoked salmon",
+    "expectedTokens": [
+      "smoked salmon"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Paté salmón",
+    "brand": "Dia",
+    "barcode": "8480017270535",
+    "category": "Seafood",
+    "ingredientsText": "salmon: 68.0%, water: 16.5%, sunflower oil: 14.0%, rice flour: 2.0%, egg powder: < 2%, potato: < 2%, salt: < 2%, smoke flavouring: < 2%, aroma natural de salmón: < 2%, Colour: < 2%, E160c: < 2%",
+    "expectedTokens": [
+      "salmon",
+      "rice flour",
+      "potatoe",
+      "natural salmon"
+    ],
+    "certification": "Green dot"
+  },
+  {
+    "productName": "Papaya Goats Cheese",
+    "brand": "Dunnes Stores",
+    "barcode": "5099874252436",
+    "category": "Dairies",
+    "ingredientsText": "Goat's Cheese (83%) [Pasteurised Goat's Milk, Salt, Sequestrant: Calcium Chloride; Vegetarian Rennet, Lactic Acid Starter Culture (Milk)], Papaya (17%) [Papaya, Cane Sugar].",
+    "expectedTokens": [
+      "papaya",
+      "cane sugar"
+    ],
+    "certification": "Absent"
+  },
+  {
+    "productName": "Alfalfa Sprouts",
+    "brand": "Fullei Fresh",
+    "barcode": "0017442300124",
+    "category": "food",
+    "ingredientsText": "Alfalfa",
+    "expectedTokens": [
+      "Alfalfa"
+    ],
+    "certification": "Non GMO Verified"
+  },
+  {
+    "productName": "Organic Alfalfa",
+    "brand": "Nutricost",
+    "barcode": "0857077008947",
+    "category": "Food",
+    "ingredientsText": "Organic Alfalfa",
+    "expectedTokens": [
+      "organic Alfalfa"
+    ],
+    "certification": "USDA Organic"
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "British potato",
+    "expectedTokens": [
+      "British potato"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "cooked potatoe",
+    "expectedTokens": [
+      "cooked potatoe"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "new potato",
+    "expectedTokens": [
+      "new potato"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "organic potatoe",
+    "expectedTokens": [
+      "organic potatoe"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "potato flour",
+    "expectedTokens": [
+      "potato flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "potato skin",
+    "expectedTokens": [
+      "potato skin"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "precooked potato",
+    "expectedTokens": [
+      "precooked potato"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Russet potato",
+    "expectedTokens": [
+      "Russet potato"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Swedish potatos",
+    "expectedTokens": [
+      "Swedish potatos"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Table potatoes",
+    "expectedTokens": [
+      "Table potatoes"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "canola oil preparation",
+    "expectedTokens": [
+      "canola oil preparation"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "fully hydrogenated canola oil",
+    "expectedTokens": [
+      "fully hydrogenated canola oil"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Non gmo canola oil",
+    "expectedTokens": [
+      "Non gmo canola oil"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "partially hydrogenated industrial canola oil",
+    "expectedTokens": [
+      "partially hydrogenated industrial canola oil"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "potato fries",
+    "expectedTokens": [
+      "potato fries"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "potato wedges",
+    "expectedTokens": [
+      "potato wedges"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "sweet potato fries",
+    "expectedTokens": [
+      "sweet potato fries"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "organic corn flour",
+    "expectedTokens": [
+      "organic corn flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "white corn flour",
+    "expectedTokens": [
+      "white corn flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "whole grain corn flour",
+    "expectedTokens": [
+      "whole grain corn flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "yellow corn flour",
+    "expectedTokens": [
+      "yellow corn flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "hydrolysed soy protein",
+    "expectedTokens": [
+      "hydrolysed soy protein"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "rehydrated textured soy protein",
+    "expectedTokens": [
+      "rehydrated textured soy protein"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "soy protein concentrated",
+    "expectedTokens": [
+      "soy protein concentrated"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "soy protein isolated",
+    "expectedTokens": [
+      "soy protein isolated"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "textured soy protein",
+    "expectedTokens": [
+      "textured soy protein"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "defatted soy flour",
+    "expectedTokens": [
+      "defatted soy flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "low fat soy flour",
+    "expectedTokens": [
+      "low fat soy flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "raw defatted soy meal",
+    "expectedTokens": [
+      "raw defatted soy meal"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Restructured soya flour",
+    "expectedTokens": [
+      "Restructured soya flour"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Natural unrefined cane sugar",
+    "expectedTokens": [
+      "Natural unrefined cane sugar"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "organic unrefined cane sugar",
+    "expectedTokens": [
+      "organic unrefined cane sugar"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "unrefined whole cane sugar",
+    "expectedTokens": [
+      "unrefined whole cane sugar"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "whole cane sugar",
+    "expectedTokens": [
+      "whole cane sugar"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "Bramley apple puree",
+    "expectedTokens": [
+      "Bramley apple puree"
+    ],
+    "certification": null
+  },
+  {
+    "productName": null,
+    "brand": null,
+    "barcode": null,
+    "category": null,
+    "ingredientsText": "dehydrated potatoe flakes",
+    "expectedTokens": [
+      "dehydrated potatoe flakes"
+    ],
+    "certification": null
+  }
+]

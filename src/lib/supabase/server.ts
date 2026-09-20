@@ -28,6 +28,26 @@ export function getServerSupabase(): SupabaseClient {
   return anonymousServerClient
 }
 
+let adminServerClient: SupabaseClient | null = null
+
+// SERVICE-ROLE client (SEC-01: never NEXT_PUBLIC_, never reaches the bundle —
+// this module starts with `import "server-only"`). Used ONLY by the
+// superadmin "create admin account" flow, which needs auth.admin.createUser()
+// that the anon key cannot perform. Everything else uses the session client
+// so Postgres sees the real auth.uid() and RLS applies.
+export function getSupabaseAdmin(): SupabaseClient {
+  if (adminServerClient) return adminServerClient
+  const { url } = requireEnv()
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceKey) {
+    throw new Error("Supabase admin client: SUPABASE_SERVICE_ROLE_KEY must be set")
+  }
+  adminServerClient = createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  return adminServerClient
+}
+
 // Cookie-bound client carrying the signed-in user's session. Every admin
 // decision uses THIS client so Postgres sees the real auth.uid() and the
 // `profiles.role` check in is_admin() actually applies (SEC-10).

@@ -90,7 +90,7 @@ describe("gmoEngine — likelihood + confidence scoring (real engine output)", (
 
   // --- 3. Ambiguous-only ingredient list ---
   describe("ambiguous-only ingredient list", () => {
-    it("returns Low likelihood with confidence penalty when only ambiguous matches exist and no explicit crop found", () => {
+    it("returns Low likelihood with Medium confidence when only ambiguous matches exist and no explicit crop found", () => {
       const result = gmoEngine(
         "ingredients: citric acid, natural flavors, xanthan gum",
         {
@@ -101,11 +101,16 @@ describe("gmoEngine — likelihood + confidence scoring (real engine output)", (
           subcategory: "packaged_food",
         }
       )
-      // The ambiguous-derivative penalty of -1 is applied ONCE per product
-      // if any ambiguous match exists with no explicit crop found elsewhere.
-      // This must change the outcome: compare to the clean-list test below.
+      // The ambiguous-derivative penalty of -1 is applied ONCE per product if
+      // any ambiguous match exists with no explicit crop found elsewhere.
+      // After the gate removal, the list also earns lookup match rate (+1) and
+      // certification clarity (+1), so the penalty yields +2 - 1 = Medium:
+      // three fully-recognized ambiguous ingredients with no explicit crop is
+      // actually decent signal quality (we read the label cleanly) even though
+      // the source crop is unknown. Medium is a legitimate outcome here — Low
+      // would imply we couldn't read the label, which is not the case.
       expect(result.result.tier).toBe("low")
-      expect(result.confidence.tier).toBe("low")
+      expect(result.confidence.tier).toBe("medium")
     })
   })
 
@@ -139,6 +144,29 @@ describe("gmoEngine — likelihood + confidence scoring (real engine output)", (
       )
       // OCR flagged truncation → completeness +2 withheld → score < 3
       expect(result.confidence.score).toBeLessThan(3)
+    })
+  })
+
+  // --- 5. Confidence is not gated on finding an explicit crop ---
+  describe("fully-recognized low-risk-only list", () => {
+    it("reaches High confidence with full OCR and no barcode, even though no crop was found", () => {
+      const result = gmoEngine(
+        "ingredients: salt, water, wheat, olive oil",
+        {
+          ocrMeanConfidence: 0.95,
+          isTruncated: false,
+          identityMatch: "none",
+          category: "gmo_food",
+          subcategory: "packaged_food",
+        }
+      )
+      // N = 0 → Low likelihood, but the read itself is confident: completeness
+      // (+2), lookup match rate at 4/4 recognized (+1), certification clarity
+      // (+1) = 4 → High. The old explicitCropCount gate wrongly capped this at
+      // Medium by withholding both bonuses.
+      expect(result.result.tier).toBe("low")
+      expect(result.confidence.tier).toBe("high")
+      expect(result.confidence.score).toBeGreaterThanOrEqual(4)
     })
   })
 })

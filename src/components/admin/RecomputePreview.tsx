@@ -8,19 +8,20 @@ import type { EngineResult } from "@/engines/types"
 import { ResultBadge } from "@/components/verdict/ResultBadge"
 import { ConfidenceBadge } from "@/components/verdict/ConfidenceBadge"
 import { MatchedTermsList } from "@/components/verdict/MatchedTermsList"
+import { Panel } from "@/components/ui/panel"
 
 export function RecomputePreview({ result }: { result: EngineResult | null }) {
   if (!result) {
     return (
-      <p className="rounded-xl border border-dashed border-zinc-300 p-3 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+      <Panel variant="hairline" className="border-dashed text-sm text-muted-foreground">
         No rules engine for this category yet (fluoride lands in Phase 6).
-      </p>
+      </Panel>
     )
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
-      <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+    <Panel variant="inset" className="space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Recomputed verdict (config v{result.configVersion})
       </p>
       <div className="flex flex-wrap items-center gap-3">
@@ -28,6 +29,6 @@ export function RecomputePreview({ result }: { result: EngineResult | null }) {
         <ConfidenceBadge tier={result.confidence.tier} factors={result.confidence.factors} />
       </div>
       <MatchedTermsList terms={result.matchedTerms} />
-    </div>
+    </Panel>
   )
 }

@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { captureFrame } from "@/lib/ocr/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { InlineAlert } from "@/components/ui/inline-alert";
 
 export type FacingMode = "front" | "back";
 type CameraStatus = "idle" | "requesting" | "ready" | "error";
@@ -107,31 +110,25 @@ export function CameraView({ facing, onCapture, onUpload }: CameraViewProps) {
 
   return (
     <div className="space-y-4">
-      <p className={`text-sm ${status === "error" ? "text-red-600 dark:text-red-400" : "text-zinc-600 dark:text-zinc-400"}`}>
+      <p className={`text-sm ${status === "error" ? "text-destructive" : "text-muted-foreground"}`}>
         {error ?? GUIDANCE[mode]}
       </p>
 
       {status === "idle" && (
-        <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-100 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900">
-          <button
-            type="button"
-            onClick={() => void startCamera()}
-            className="h-12 w-full rounded-full bg-zinc-900 px-6 text-base font-medium text-zinc-50 transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            Open camera
-          </button>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="h-12 w-full rounded-full border border-zinc-300 px-6 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-200 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-          >
-            Choose from photos
-          </button>
-        </div>
+        <Card className="gap-3 py-6 text-center">
+          <CardContent className="flex flex-col gap-3 px-6">
+            <Button type="button" size="lg" onClick={() => void startCamera()}>
+              Open camera
+            </Button>
+            <Button type="button" variant="outline" size="lg" onClick={() => fileRef.current?.click()}>
+              Choose from photos
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {status === "requesting" && (
-        <div className="flex aspect-[3/4] items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-100 text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+        <div className="flex aspect-[3/4] items-center justify-center rounded-xl border bg-muted text-muted-foreground">
           Starting camera…
         </div>
       )}
@@ -149,49 +146,39 @@ export function CameraView({ facing, onCapture, onUpload }: CameraViewProps) {
             <div className="pointer-events-none absolute inset-x-5 inset-y-7 rounded-2xl border-2 border-dashed border-white/70" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => void capture()}
-              className="h-12 rounded-full bg-zinc-900 px-6 text-base font-medium text-zinc-50 transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
+            <Button type="button" size="lg" onClick={() => void capture()}>
               Take photo
-            </button>
-            <button
-              type="button"
-              onClick={switchCamera}
-              className="h-12 rounded-full border border-zinc-300 px-6 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-200 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-            >
+            </Button>
+            <Button type="button" variant="outline" size="lg" onClick={switchCamera}>
               Switch camera
-            </button>
+            </Button>
           </div>
-          <button
+          <Button
             type="button"
+            variant="link"
+            className="h-auto w-full text-sm underline underline-offset-4"
             onClick={() => fileRef.current?.click()}
-            className="h-12 w-full text-sm font-medium text-zinc-600 underline underline-offset-4 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
           >
             Use a photo from files instead
-          </button>
+          </Button>
         </div>
       )}
 
       {status === "error" && (
-        <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-100 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900">
-          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{error}</p>
-          <button
-            type="button"
-            onClick={() => void startCamera()}
-            className="h-12 w-full rounded-full bg-zinc-900 px-6 text-base font-medium text-zinc-50 transition-colors hover:bg-zinc-700 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            Try again
-          </button>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="h-12 w-full rounded-full border border-zinc-300 px-6 text-base font-medium text-zinc-800 transition-colors hover:bg-zinc-200 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-          >
-            Choose a photo instead
-          </button>
-        </div>
+        <Card className="gap-3 py-6 text-center">
+          <CardContent className="flex flex-col gap-3 px-6">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">{error}</p>
+              <InlineAlert variant="info">Camera permission is often denied in the browser&apos;s site settings. Check your browser&apos;s permission bar for this site, then try again.</InlineAlert>
+            </div>
+            <Button type="button" size="lg" onClick={() => void startCamera()}>
+              Try again
+            </Button>
+            <Button type="button" variant="outline" size="lg" onClick={() => fileRef.current?.click()}>
+              Choose a photo instead
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       <input

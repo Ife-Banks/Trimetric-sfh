@@ -16,6 +16,23 @@ import {
   uploadSubmissionImage,
 } from "@/lib/upload/uploadImage"
 import type { SubmissionPayload } from "@/lib/validation/schemas"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Field } from "@/components/ui/field"
+import { InlineAlert } from "@/components/ui/inline-alert"
+import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+// Radix Select items can't carry an empty-string value; "none" maps to "".
+const CERT_NONE = "none"
 
 export interface SubmissionPrefill {
   productName: string
@@ -150,6 +167,9 @@ export function SubmissionForm({
       }
 
       window.sessionStorage.removeItem(DRAFT_KEY)
+      toast.success("Correction submitted", {
+        description: "A reviewer will check it shortly. It's now in your history.",
+      })
       onSuccess()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -160,102 +180,99 @@ export function SubmissionForm({
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-      <div>
-        <label htmlFor="product-name" className="mb-1 block text-sm font-medium">
-          Product name <span className="text-red-500" aria-hidden="true">*</span>
-        </label>
-        <input
+      <Field label="Product name" htmlFor="product-name" required>
+        <Input
           id="product-name"
           name="product-name"
           value={draft.productName}
           onChange={(e) => setDraft((d) => ({ ...d, productName: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="brand" className="mb-1 block text-sm font-medium">
-          Brand
-        </label>
-        <input
+      <Field label="Brand" htmlFor="brand">
+        <Input
           id="brand"
           name="brand"
           value={draft.brand}
           onChange={(e) => setDraft((d) => ({ ...d, brand: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
         />
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="ingredients" className="mb-1 block text-sm font-medium">
-          Ingredients text <span className="text-red-500" aria-hidden="true">*</span>
-        </label>
-        <textarea
+      <Field
+        label="Ingredients text"
+        htmlFor="ingredients"
+        required
+        helper="This is the correction step — fix any OCR mistakes in what was extracted."
+      >
+        <Textarea
           id="ingredients"
           name="ingredients"
           rows={6}
+          className="font-mono"
           value={draft.ingredientsText}
           onChange={(e) => setDraft((d) => ({ ...d, ingredientsText: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 font-mono text-sm dark:border-zinc-700 dark:bg-zinc-900"
         />
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-          This is the correction step — fix any OCR mistakes in what was extracted.
-        </p>
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="certification" className="mb-1 block text-sm font-medium">
-          Certification visible on packaging
-        </label>
-        <select
-          id="certification"
-          name="certification"
-          value={certification}
-          onChange={(e) => setDraft((d) => ({ ...d, certificationText: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+      <Field label="Certification visible on packaging" htmlFor="certification" noClone>
+        <Select
+          value={certification || CERT_NONE}
+          onValueChange={(v) =>
+            setDraft((d) => ({ ...d, certificationText: v === CERT_NONE ? "" : v }))
+          }
         >
-          <option value="">None visible</option>
-          {CERT_OPTIONS.map((cert) => (
-            <option key={cert} value={cert}>
-              {cert}
-            </option>
-          ))}
-        </select>
-      </div>
+          <SelectTrigger id="certification" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={CERT_NONE}>None visible</SelectItem>
+            {CERT_OPTIONS.map((cert) => (
+              <SelectItem key={cert} value={cert}>
+                {cert}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
 
-      <div>
-        <p className="mb-1 text-sm font-medium">
-          Photo <span className="text-red-500" aria-hidden="true">*</span>
+      <div className="space-y-1.5">
+        <p className="text-sm font-medium">
+          Photo{" "}
+          <span className="text-destructive" aria-hidden="true">
+            *
+          </span>
         </p>
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element -- local object URL from the camera; next/image can't optimize blob: URLs
           <img
             src={photo.url}
             alt="Attached label photo to submit"
-            className="h-36 w-full rounded-xl border border-zinc-200 object-cover dark:border-zinc-800"
+            className="h-36 w-full rounded-xl border object-cover"
           />
         ) : (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">No photo attached.</p>
+          <p className="text-sm text-muted-foreground">No photo attached.</p>
         )}
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="text-xs text-muted-foreground">
           Re-encoded client-side (EXIF stripped) before upload.
         </p>
       </div>
 
       {error && (
-        <p role="alert" aria-live="assertive" className="text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <InlineAlert variant="destructive">
+          <p aria-live="assertive">{error}</p>
+        </InlineAlert>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="h-12 w-full rounded-full bg-zinc-900 text-base font-medium text-zinc-50 transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-      >
-        {submitting ? "Submitting…" : "Submit for review"}
-      </button>
-      <p className="text-center text-xs text-zinc-500 dark:text-zinc-400" aria-live="polite">
+      <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+        {submitting ? (
+          <>
+            <Spinner /> Submitting…
+          </>
+        ) : (
+          "Submit for review"
+        )}
+      </Button>
+      <p className="text-center text-xs text-muted-foreground" aria-live="polite">
         Your correction goes to a human reviewer before it affects anyone&apos;s verdict.
       </p>
     </form>

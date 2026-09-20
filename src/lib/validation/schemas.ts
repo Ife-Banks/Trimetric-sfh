@@ -94,3 +94,14 @@ export const rejectPayloadSchema = z.object({
 export type FinalPayload = z.infer<typeof finalPayloadSchema>
 export type ApprovePayload = z.infer<typeof approvePayloadSchema>
 export type RejectPayload = z.infer<typeof rejectPayloadSchema>
+
+// ---------------------------------------------------------------------------
+// Superadmin — create an admin account (email + password).
+// ---------------------------------------------------------------------------
+
+export const createAdminPayloadSchema = z.object({
+  email: z.string().trim().toLowerCase().email("A valid email is required").max(200),
+  password: z.string().min(8, "Password must be at least 8 characters").max(200),
+})
+
+export type CreateAdminPayload = z.infer<typeof createAdminPayloadSchema>

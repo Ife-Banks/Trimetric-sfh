@@ -1,8 +1,12 @@
 "use client"
 
 import Link from "next/link"
+import { Inbox } from "lucide-react"
 import type { SubmissionForReview } from "@/lib/admin/recompute"
 import { SubmissionRow } from "@/components/admin/SubmissionRow"
+import { PageContainer, PageHeader } from "@/components/layout/page-header"
+import { EmptyState } from "@/components/ui/empty-state"
+import { Button } from "@/components/ui/button"
 
 export type QueueCategory = "all" | SubmissionForReview["category"]
 
@@ -26,34 +30,40 @@ export function ReviewQueue({ rows, total, page, pageSize, category }: ReviewQue
   const nextHref = `/admin?category=${category}&page=${Math.min(totalPages, page + 1)}`
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="text-xl font-semibold">Review queue</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{total} pending submission{total === 1 ? "" : "s"}</p>
-        </div>
-        <nav className="flex gap-2" aria-label="Filter by category">
-          {FILTERS.map((filter) => (
-            <Link
-              key={filter.value}
-              href={`/admin?category=${filter.value}`}
-              aria-current={category === filter.value ? "page" : undefined}
-              className={`rounded-full border px-3 py-1 text-sm ${
-                category === filter.value
-                  ? "border-zinc-900 bg-zinc-900 text-zinc-50 dark:border-zinc-50 dark:bg-zinc-50 dark:text-zinc-900"
-                  : "border-zinc-300 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
-              }`}
-            >
-              {filter.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
+    <PageContainer size="lg" className="py-0">
+      <PageHeader
+        title="Review queue"
+        description={`${total} pending submission${total === 1 ? "" : "s"}`}
+        actions={
+          <nav className="flex gap-1" aria-label="Filter by category">
+            {FILTERS.map((filter) => (
+              <Button
+                key={filter.value}
+                asChild
+                variant={category === filter.value ? "default" : "outline"}
+                size="sm"
+                className="rounded-full"
+              >
+                <Link
+                  href={`/admin?category=${filter.value}`}
+                  aria-current={category === filter.value ? "page" : undefined}
+                >
+                  {filter.label}
+                </Link>
+              </Button>
+            ))}
+          </nav>
+        }
+      />
 
       {rows.length === 0 ? (
-        <p className="mt-8 rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-          No pending submissions in this category.
-        </p>
+        <div className="mt-6">
+          <EmptyState
+            icon={<Inbox className="size-5" aria-hidden="true" />}
+            title="Queue cleared"
+            description="No pending submissions in this category. New corrections appear here for review."
+          />
+        </div>
       ) : (
         <ul className="mt-6 space-y-3">
           {rows.map((row) => (
@@ -64,33 +74,29 @@ export function ReviewQueue({ rows, total, page, pageSize, category }: ReviewQue
 
       {totalPages > 1 && (
         <nav className="mt-6 flex items-center justify-between" aria-label="Pagination">
-          <Link
-            href={prevHref}
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className={page <= 1 ? "pointer-events-none opacity-50" : ""}
             aria-disabled={page <= 1}
-            className={`rounded-full border px-4 py-1.5 text-sm ${
-              page <= 1
-                ? "pointer-events-none border-zinc-200 text-zinc-300 dark:border-zinc-800 dark:text-zinc-600"
-                : "border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
-            }`}
           >
-            Previous
-          </Link>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
+            <Link href={prevHref}>Previous</Link>
+          </Button>
+          <span className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
           </span>
-          <Link
-            href={nextHref}
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
             aria-disabled={page >= totalPages}
-            className={`rounded-full border px-4 py-1.5 text-sm ${
-              page >= totalPages
-                ? "pointer-events-none border-zinc-200 text-zinc-300 dark:border-zinc-800 dark:text-zinc-600"
-                : "border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
-            }`}
           >
-            Next
-          </Link>
+            <Link href={nextHref}>Next</Link>
+          </Button>
         </nav>
       )}
-    </main>
+    </PageContainer>
   )
 }

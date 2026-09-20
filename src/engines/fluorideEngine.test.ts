@@ -112,6 +112,18 @@ describe("fluorideEngine — confidence honesty", () => {
     expect(["low", "medium"]).toContain(r.confidence.tier)
   })
 
+  it("cannot reach High via a default-ppm fallback even with a barcode match (cap is 3, not 4)", () => {
+    const r = fluorideEngine(
+      "Sodium Monofluorophosphate dentifrice",
+      ctx({ identityMatch: "barcode" })
+    )
+    // +2 completeness, +2 barcode, +1 lookup, +0 concentration = 5, but a
+    // default-ppm fallback is capped at 3 → Medium. With the old Math.min(4)
+    // this reached exactly 4 → High, which overstates a guess.
+    expect(r.confidence.tier).toBe("medium")
+    expect(r.confidence.score).toBe(3)
+  })
+
   it("does not claim High confidence without an explicit ppm value", () => {
     const r = fluorideEngine("Sodium Monofluorophosphate dentifrice", ctx())
     expect(r.confidence.tier).not.toBe("high")

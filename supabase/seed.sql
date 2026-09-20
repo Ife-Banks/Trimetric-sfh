@@ -21,9 +21,9 @@
 --    etc.); confidence_tier follows the points system (barcode match and a
 --    complete list score high; an ambiguous derivative like "sugar
 --    (unspecified)" with no explicit crop deducts a point).
---  * Oral-care products are intentionally NOT seeded yet — the fluoride
---    ruleset is unreleased (Phase 6). Seeding fabricated fluoride verdicts
---    now would poison the stored-verdict path.
+--  * Oral-care products ARE seeded (Phase 6 shipped). The published fluoride
+--    ruleset is v1.3; stored oral-care verdicts were computed by
+--    src/engines/fluorideEngine.ts against data/fluoride_lookup_config_v1.3.json.
 -- ============================================================================
 
 begin;
@@ -58,13 +58,15 @@ select
       { "crop_family": "apple", "aliases": ["apple"] },
       { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
       { "crop_family": "potato", "aliases": ["potato"] },
-      { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] }
+      { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] },
+      { "crop_family": "salmon", "aliases": ["salmon", "pink salmon", "red salmon", "smoked salmon", "natural salmon", "oncorhynchus gorbuscha", "oncorhynchus nerka"] }
     ]
   },
   "ambiguous_derivative_matches": {
-    "note": "Ingredients that MAY derive from a GMO crop but the label does not disclose the source. Presence lowers confidence, not likelihood.",
+    "note": "Ingredients that MAY derive from a GMO crop but the label does not disclose the source. Presence lowers confidence, not likelihood. The ''any unspecified vegetable [X]'' catch-all is enforced in engine code (gmoEngine.classifyToken), not as fixed phrases here.",
     "entries": [
       { "ingredient": "citric acid", "possible_sources": ["corn", "beet", "synthetic"] },
+      { "ingredient": "food acid", "possible_sources": ["corn", "beet", "synthetic"] },
       { "ingredient": "ascorbic acid", "possible_sources": ["corn", "synthetic"] },
       { "ingredient": "maltodextrin", "possible_sources": ["corn", "rice", "potato"] },
       { "ingredient": "vegetable oil (unspecified)", "possible_sources": ["soy", "canola", "corn", "palm"] },
@@ -73,14 +75,13 @@ select
       { "ingredient": "sugar (unspecified)", "possible_sources": ["sugar beet", "sugarcane"] },
       { "ingredient": "molasses", "possible_sources": ["sugar beet", "sugarcane"] },
       { "ingredient": "cellulose", "possible_sources": ["various plant sources"] },
-      { "ingredient": "soy hemoglobin", "possible_sources": ["soy"] },
-      { "ingredient": "vegetable", "possible_sources": ["unspecified ''vegetable X'' term"] }
+      { "ingredient": "soy hemoglobin", "possible_sources": ["soy"] }
     ]
   },
   "low_risk_tokens": [
     "salt", "water", "vinegar", "pepper", "garlic", "onion", "spices",
     "sugar", "molasses", "honey", "oil", "vegetable oil", "flour", "rice",
-    "natural flavors", "natural flavoring", "monk fruit", "stevia",
+    "wheat", "natural flavors", "natural flavoring", "monk fruit", "stevia",
     "xanthan gum", "citric acid", "fruit juice", "puree", "vinegar"
   ],
   "likelihood_scoring": {
@@ -114,28 +115,354 @@ on conflict (category, version) do update
       is_published = excluded.is_published,
       published_at = excluded.published_at;
 
--- Fluoride ruleset: PLACEHOLDER (unpublished) — the real spec lands in Phase 6.
--- Replace this row with the real fluoride config JSON and is_published = true
--- as part of the fluoride engine build. It is NOT live, so the app will not
--- serve it to clients.
-insert into lookup_config (category, version, config_json, is_published)
+insert into lookup_config (category, version, config_json, is_published, published_at)
 values (
   'oral_care',
-  '1.0',
+  '1.3',
   '{
-  "project": "SHF Fluoride Lookup Config (PLACEHOLDER — replace in Phase 6)",
-  "version": "1.0",
-  "note": "Unreleased placeholder. Do not publish. No fluoride verdicts are produced until the real spec ships.",
-  "thresholds": [],
-  "english_terms": [],
-  "nigerian_pidgin_terms": [],
-  "risk_phrases": []
+  "project": "SHF Fluoride Detection & Lookup Architecture",
+  "version": "1.3",
+  "scope_note": "Oral care only for 4-week MVP (toothpaste/gel + mouthwash/rinse). Water, salt, and milk/formula category tables removed from scope — see v1.1 if that gets revisited later.",
+  "changelog_from_1.1": [
+    "Removed FL06 potassium fluoride (salt-specific, out of scope)",
+    "Removed category_detection block — every scanned product is oral care by definition now",
+    "Removed water_beverages, salt, milk_formula threshold tables",
+    "Removed ''category could not be determined'' from LOW_CONFIDENCE reasons",
+    "Kept multi-language synonyms — imported oral-care brands still show non-English labels"
+  ],
+  "changelog_from_1.2": [
+    "Added verdict_screen_schema — maps Product_Master_Dataset columns to computed vs. admin-curated fields",
+    "Added submission_form_schema — the fields collected when confidence is Low/No-data",
+    "Added admin_review_schema — what the review queue shows and what approval writes"
+  ],
+  "terms_lookup_table": [
+    {
+      "term_id": "FL01",
+      "raw_term": "sodium fluoride",
+      "normalized_term": "Sodium Fluoride",
+      "synonyms": "NaF, Natrium Fluoride, E954 (contextual), fluorure de sodium, Natriumfluorid, fluoruro de sodio, natriumfluoridi, fluorid sodný",
+      "compound_type": "Active Fluoride",
+      "std_concentration_wt": "0.243%",
+      "ppm_multiplier": 4500,
+      "default_ppm": 1100,
+      "regex_pattern": "\\b(sodium\\s+fluoride|naf|fluorure\\s+de\\s+sodium|natriumfluorid|fluoruro\\s+de\\s+sodio|natriumfluoridi|fluorid\\s+sodn[yý])\\b"
+    },
+    {
+      "term_id": "FL02",
+      "raw_term": "stannous fluoride",
+      "normalized_term": "Stannous Fluoride",
+      "synonyms": "SnF2, Tin(II) Fluoride",
+      "compound_type": "Active Fluoride",
+      "std_concentration_wt": "0.454%",
+      "ppm_multiplier": 2420,
+      "default_ppm": 1100,
+      "regex_pattern": "\\b(stannous\\s+fluoride|snf2|tin\\s+fluoride)\\b"
+    },
+    {
+      "term_id": "FL03",
+      "raw_term": "sodium monofluorophosphate",
+      "normalized_term": "Sodium Monofluorophosphate",
+      "synonyms": "SMFP, MFP, Na2PO3F",
+      "compound_type": "Active Fluoride",
+      "std_concentration_wt": "0.76%",
+      "ppm_multiplier": 1315,
+      "default_ppm": 1000,
+      "regex_pattern": "\\b(sodium\\s+monofluorophosphate|smfp|mfp|na2po3f)\\b"
+    },
+    {
+      "term_id": "FL04",
+      "raw_term": "amine fluoride",
+      "normalized_term": "Amine Fluoride",
+      "synonyms": "Olaflur, Dectaflur",
+      "compound_type": "Active Fluoride",
+      "std_concentration_wt": "1.00%",
+      "ppm_multiplier": 1400,
+      "default_ppm": 1400,
+      "regex_pattern": "\\b(amine\\s+fluoride|olaflur|dectaflur)\\b"
+    },
+    {
+      "term_id": "FL05",
+      "raw_term": "acidulated phosphate fluoride",
+      "normalized_term": "Acidulated Phosphate Fluoride",
+      "synonyms": "APF",
+      "compound_type": "Active Fluoride",
+      "std_concentration_wt": "1.23%",
+      "ppm_multiplier": 10000,
+      "default_ppm": 12300,
+      "regex_pattern": "\\b(acidulated\\s+phosphate\\s+fluoride|apf)\\b"
+    },
+    {
+      "term_id": "NFL01",
+      "raw_term": "nano-hydroxyapatite",
+      "normalized_term": "Nano-hydroxyapatite",
+      "synonyms": "nHAp, Hydroxyapatite, Micro-hydroxyapatite",
+      "compound_type": "Fluoride Alternative",
+      "default_ppm": 0,
+      "classification": "Fluoride-Free",
+      "regex_pattern": "\\b(nano[- ]?hydroxyapatite|nhap|hydroxyapatite)\\b"
+    },
+    {
+      "term_id": "NFL02",
+      "raw_term": "calcium carbonate",
+      "normalized_term": "Calcium Carbonate",
+      "synonyms": "Chalk, Limestone, CaCO3",
+      "compound_type": "Abrasive / Non-Fluoride Active",
+      "default_ppm": 0,
+      "classification": "Fluoride-Free",
+      "regex_pattern": "\\b(calcium\\s+carbonate|caco3)\\b"
+    },
+    {
+      "term_id": "NFL03",
+      "raw_term": "sodium bicarbonate",
+      "normalized_term": "Sodium Bicarbonate",
+      "synonyms": "Baking Soda, NaHCO3",
+      "compound_type": "Abrasive / Non-Fluoride Active",
+      "default_ppm": 0,
+      "classification": "Fluoride-Free",
+      "regex_pattern": "\\b(sodium\\s+bicarbonate|baking\\s+soda)\\b"
+    },
+    {
+      "term_id": "NFL04",
+      "raw_term": "xylitol",
+      "normalized_term": "Xylitol",
+      "synonyms": "Birch Sugar",
+      "compound_type": "Sweetener / Non-Fluoride Active",
+      "default_ppm": 0,
+      "classification": "Fluoride-Free",
+      "regex_pattern": "\\b(xylitol)\\b"
+    }
+  ],
+  "subcategory_detection": {
+    "note": "Only two subcategories to distinguish within oral care — much simpler than the dropped multi-category version. Can be a single keyword check or even a manual toggle on the capture screen if OCR-based detection isn''t reliable in time.",
+    "toothpaste_gel_keywords": [
+      "toothpaste",
+      "dentifrice",
+      "gel",
+      "zahncreme",
+      "pasta de dientes"
+    ],
+    "mouthwash_rinse_keywords": [
+      "mouthwash",
+      "rinse",
+      "mondwater",
+      "collutorio"
+    ],
+    "fallback": "If neither keyword set matches, default to toothpaste_gel table (larger of the two categories) and cap confidence at Medium."
+  },
+  "category_ppm_tables": {
+    "toothpaste_gel": [
+      {
+        "tier": "Low (Children''s)",
+        "ppm_range": [
+          250,
+          500
+        ],
+        "verdict": "Low Fluoride Content",
+        "guidance": "Formulated for young toddlers to reduce fluorosis risk if swallowed."
+      },
+      {
+        "tier": "Standard (Adult OTC)",
+        "ppm_range": [
+          1000,
+          1500
+        ],
+        "verdict": "Standard Fluoride Content",
+        "guidance": "Typical daily adult cavity protection level."
+      },
+      {
+        "tier": "High (Prescription/Clinical)",
+        "ppm_range": [
+          5000,
+          25000
+        ],
+        "verdict": "High Fluoride Content — Prescription Strength",
+        "guidance": "Dentist-prescribed or in-office use only; not typical daily OTC strength."
+      },
+      {
+        "tier": "Fluoride-Free",
+        "ppm_range": [
+          0,
+          0
+        ],
+        "verdict": "Fluoride-Free"
+      }
+    ],
+    "mouthwash_rinse": [
+      {
+        "tier": "Low",
+        "ppm_range": [
+          0,
+          99
+        ],
+        "verdict": "Low Fluoride Content"
+      },
+      {
+        "tier": "Standard (Daily Rinse)",
+        "ppm_range": [
+          100,
+          250
+        ],
+        "verdict": "Standard Fluoride Content",
+        "guidance": "Typical daily anticavity rinse strength."
+      },
+      {
+        "tier": "High",
+        "ppm_range": [
+          251,
+          1000
+        ],
+        "verdict": "High Fluoride Content"
+      },
+      {
+        "tier": "Fluoride-Free",
+        "ppm_range": [
+          0,
+          0
+        ],
+        "verdict": "Fluoride-Free"
+      }
+    ]
+  },
+  "confidence_scoring_rules": {
+    "high_confidence_threshold": 0.9,
+    "medium_confidence_threshold": 0.6,
+    "low_confidence_threshold": 0.01,
+    "trigger_user_input_below": 0.6,
+    "triggers": [
+      {
+        "status": "LOW_CONFIDENCE",
+        "confidence_score_range": "[0.01, 0.59]",
+        "action": "PROMPT_USER_INPUT",
+        "reasons": [
+          "Ambiguous compound name matched without concentration",
+          "Conflicting text tokens (e.g. both ''Fluoride-Free'' and ''Sodium Fluoride'' detected)",
+          "OCR text extraction quality below 60%",
+          "Unusual concentration for detected subcategory (out-of-bounds anomaly)"
+        ],
+        "ui_prompt": "We found fluoride terms, but couldn''t verify exact details. Please select your product type or confirm ingredients."
+      },
+      {
+        "status": "NO_DATA",
+        "confidence_score_range": "0.00",
+        "action": "PROMPT_USER_INPUT",
+        "reasons": [
+          "Zero matched terms in ingredients text",
+          "Barcode not found in master database",
+          "OCR pipeline failed to extract readable text"
+        ],
+        "ui_prompt": "We couldn''t recognize this product. Please enter the product name or scan the active ingredients list."
+      }
+    ]
+  },
+  "verdict_screen_schema": {
+    "note": "Field list mirrors Product_Master_Dataset columns. ''source: computed'' fields come from the rules engine; ''source: admin_curated'' fields are optional and only appear when a human has added them to a verified product — never auto-generated.",
+    "fields": [
+      {
+        "field": "Product Name / Brand",
+        "source": "ocr_or_barcode_match",
+        "always_shown": true
+      },
+      {
+        "field": "Result",
+        "source": "computed",
+        "from": "category_ppm_tables[subcategory].verdict",
+        "always_shown": true,
+        "ui": "primary color-coded badge"
+      },
+      {
+        "field": "Confidence",
+        "source": "computed",
+        "from": "confidence_scoring_rules",
+        "always_shown": true,
+        "ui": "secondary badge, shown alongside Result, never merged into one badge"
+      },
+      {
+        "field": "Strength Classification",
+        "source": "computed",
+        "from": "category_ppm_tables[subcategory].tier",
+        "always_shown": true
+      },
+      {
+        "field": "Active Compound",
+        "source": "computed",
+        "from": "terms_lookup_table match + extracted concentration",
+        "always_shown": true
+      },
+      {
+        "field": "Why It Matters",
+        "source": "computed",
+        "from": "category_ppm_tables[subcategory].guidance",
+        "always_shown": true,
+        "ui": "plain-language subtext under the badges"
+      },
+      {
+        "field": "Target Audience / Usage Notes",
+        "source": "admin_curated",
+        "always_shown": false,
+        "note": "Not computable from PPM tier alone — specific context like ''orthodontic patients 6+'' requires human judgment. Blank unless an admin previously enriched this exact verified product."
+      }
+    ]
+  },
+  "submission_form_schema": {
+    "note": "Shown when confidence is Low or No-data. Only asks for what the engine couldn''t determine — no Why It Matters or Target Audience fields here, those are admin-added at review time.",
+    "fields": [
+      {
+        "field": "Product name",
+        "prefill": "OCR guess if available",
+        "required": true
+      },
+      {
+        "field": "Brand",
+        "prefill": "OCR guess if available",
+        "required": false
+      },
+      {
+        "field": "Subcategory",
+        "input": "dropdown: toothpaste_gel | mouthwash_rinse",
+        "required": true,
+        "note": "Drives which category_ppm_tables entry applies"
+      },
+      {
+        "field": "Ingredients text",
+        "prefill": "OCR extraction, editable",
+        "required": true,
+        "note": "This is the actual correction step — most submissions will just be fixing OCR errors here"
+      },
+      {
+        "field": "Active compound (if visible on packaging)",
+        "input": "dropdown from terms_lookup_table, or ''not sure''",
+        "required": false
+      },
+      {
+        "field": "Concentration/PPM as printed",
+        "input": "free text",
+        "required": false
+      },
+      {
+        "field": "Photo",
+        "source": "auto-attached from capture step",
+        "required": true,
+        "note": "Do not re-ask — already captured"
+      }
+    ]
+  },
+  "admin_review_schema": {
+    "shown_per_submission": [
+      "All submission_form_schema fields as submitted by the user",
+      "Live preview: what Result / Strength Classification / Active Compound the rules engine computes from the (corrected) ingredients text",
+      "Approve / Reject actions"
+    ],
+    "on_approve": "Writes a new row into Product_Master_Dataset with a new Product ID. Result, Strength Classification, and Active Compound come from the computed preview (admin may hand-edit before approving). Target Audience/Usage Notes stays blank unless the admin fills it in manually.",
+    "on_reject": "Submission status set to rejected, not written to Product_Master_Dataset. No user-facing notification required for MVP."
+  }
 }'::jsonb,
-  false
+  true,
+  now()
 )
 on conflict (category, version) do update
   set config_json = excluded.config_json,
-      is_published = excluded.is_published;
+      is_published = excluded.is_published,
+      published_at = excluded.published_at;
 
 -- ---------------------------------------------------------------------------
 -- 2. products — curated verified dataset
@@ -361,9 +688,9 @@ insert into products (barcode, name, brand, category, subcategory, ingredients_t
   NULL, 'Golden Penny Instant Noodles Onion Flavour', 'Golden Penny (Flour Mills of Nigeria)',
   'gmo_food', 'packaged_food',
   'Wheat flour, refined palm oil, salt, sugar, onion flavour, spices, anticaking agent E551',
-  'low', 'Low likelihood', 'medium',
+  'low', 'Low likelihood', 'high',
   '[]'::jsonb,
-  'Sibling of the barcoded Indomie row; exercises fuzzy name matching across a brand family.',
+  'Sibling of the barcoded Indomie row; full wheat/palm-oil list recognized at ≥80% → high-confidence read of a low-likelihood recipe. Exercises fuzzy name matching across a brand family.',
   'Name-tier fuzzy-match reference: near-alias of Indomie Chicken Flavour.', '1.0'
 ),
 (
@@ -432,5 +759,158 @@ insert into products (barcode, name, brand, category, subcategory, ingredients_t
 --   1. Supabase Dashboard → Authentication → Users → Add user (or sign up in app).
 --   2. Copy that user's UUID.
 --   3. Paste & run supabase/seed-admin.sql with that UUID substituted.
+
+
+-- ---------------------------------------------------------------------------
+-- 4. Phase 6 additions — oral_care first (dataset balance), then diverse GMO
+-- ---------------------------------------------------------------------------
+
+insert into products (barcode, name, brand, category, subcategory, ingredients_text, result_tier, result_label, confidence_tier, matched_terms, guidance_text, target_audience_notes, config_version) values
+(
+  '8850007817734', 'Listerine Total Care – 100ml', 'Listerine',
+  'oral_care', 'mouthwash_rinse',
+  'Water, Sorbitol, Propylene Glycol, Poloxamer 407, Sodium Lauryl Sulfate, Eucalyptol, Zinc Chloride, Benzoic Acid, Sodium Benzoate, Thymol, Sodium Saccharin, Methyle Salicylate, Flavor, Sodium Fluoride, Menthol, Aroma, Sucralose, CI 16035, CI 42090, contains 220ppm of fluoride when packed',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  '5054563126450', 'Parodontax Mondwater extra fresh – 500ml', 'Parodontax',
+  'oral_care', 'mouthwash_rinse',
+  'Aqua, Glycerin, PEG-60 Hydrogenated Castor Oil, Sodium Citrate, Sodium Lauryl Sulfate, Aroma, Menthol, Methylparaben, Propylparaben, Zinc Chloride, Gellan Gum, o-cymen-5-ol, Sodium Fluoride, Sodium Saccharin, Mentha Piperita Oil, Anethole, CI 17200. Bevat NATRIUMFLUORIDE (225ppm F)',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  '2002458969692', 'Multi-Action Toothpaste – Glister', 'Glister',
+  'oral_care', 'toothpaste_gel',
+  'Aqua, Sorbitol, Hydrated Silica, Glycerin, Propylene Glycol, Sodium Lauryl Sulfate, Xylitol, Cellulose Gum, PEG-8, Aroma, CI 77891, Sodium Benzoate, Xanthan Gum, Sodium Fluoride, Sodium Saccharin, CI 42090, Limonene.',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"},{"term":"xylitol","normalized":"Xylitol","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  '4026600015127', 'Odol-med3 – 125ml', NULL,
+  'oral_care', 'toothpaste_gel',
+  'Aqua. Hydrated Silica. Sorbitol. Glycerin Sodium Lauryl Sulfate. Xanthan Gum, Aroma. Titanium Dioxide. PEG-6. Sodium Fluoride. Sodium Saccharin, Carrageenan, Limonene, CI 73360. CI 74160',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  '4326470542540', 'Elina dent Zahncreme', NULL,
+  'oral_care', 'toothpaste_gel',
+  'Aqua, Glycerin, Hydrated Silica, Sorbitol, Cellulose Gum, C14-16 Olefin Sulfonate, Aroma, Sodium Fluoride, Sodium Methylparaben, Sodium Saccharin CI 14720. Enthalt: Natriumfluorid (500 ppm F)',
+  'low', 'Low Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"}]'::jsonb,
+  'Formulated for young toddlers to reduce fluorosis risk if swallowed.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  '0819156023234', 'Natural Friendly', 'Hello',
+  'oral_care', 'toothpaste_gel',
+  'calcium carbonate, hydrated silica, purified water, vegetable glycerin, sodium lauryl sulfate (coconut derived), carrageenan, flavor, sodium fluoride, zinc citrate, sodium bicarbonate, xylitol, sodium cocoyl glutamate, stevia rebaudiana leaf extract, potassium sorbate, organic tea tree oil, organic coconut oil',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"},{"term":"calcium carbonate","normalized":"Calcium Carbonate","kind":"active_compound"},{"term":"sodium bicarbonate","normalized":"Sodium Bicarbonate","kind":"active_compound"},{"term":"xylitol","normalized":"Xylitol","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  NULL, 'Colgate-Triple Action', 'Triple Action',
+  'oral_care', 'toothpaste_gel',
+  'Sodium monofluorophosphate',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium monofluorophosphate","normalized":"Sodium Monofluorophosphate","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+),
+(
+  NULL, 'oral B', NULL,
+  'oral_care', 'toothpaste_gel',
+  'Sorbitol, Aqua, Hydrated Silica, Aroma, Cellulose gum, Sodium phosphate, Sodium Fluoride, Mica, Limeonene.',
+  'medium', 'Standard Fluoride Content', 'medium',
+  '[{"term":"sodium fluoride","normalized":"Sodium Fluoride","kind":"active_compound"}]'::jsonb,
+  'Typical daily adult cavity protection level.',
+  'Oral-care seed row (Odunayo product search) — seeded to balance category coverage.', '1.3'
+);
+
+insert into products (barcode, name, brand, category, subcategory, ingredients_text, result_tier, result_label, confidence_tier, matched_terms, guidance_text, target_audience_notes, config_version) values
+(
+  '0073472001202', 'EZEKIEL 4:9 FLOURLESS SPROUTED GRAIN BREAD', 'Food For Life',
+  'gmo_food', 'packaged_food',
+  'organic sprouted wheat, filtered water, organic sprouted barley, organic sprouted millet, organic malted barley, organic sprouted lentils, organic sprouted soybeans, organic sprouted spelt, fresh yeast,organic wheat gluten, sea salt.',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"organic sprouted soybeans","normalized":"soy","kind":"explicit","detail":"soy"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  '6111180007339', 'Chocao', 'Chocao',
+  'gmo_food', 'packaged_food',
+  'sugar: 59.0%, cocoa powder: 25.0%, corn starch: 8.4%, E412: 4.8%, flavouring: 3.0%, vanilla flavouring: 3.0%, chocolate: < 2%',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"corn starch  8 4","normalized":"corn","kind":"explicit","detail":"corn"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  '7613037397956', 'Burger Soja', 'Garden gourmet',
+  'gmo_food', 'packaged_food',
+  'water, concentrated soy protein (18,5%), vegetable oils (colza, coconut), natural aromas, wheat gluten, stabilizer: methyl cellulose, alcohol vinegar, fruit and vegetable concentrate (betterave, carrot, pepper, blackcurrant), salt, barley malt extract, '',gmo-free',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"concentrated soy protein  18","normalized":"soy","kind":"explicit","detail":"soy"},{"term":"vegetable oils  colza","normalized":"ambiguous derivative","kind":"ambiguous","detail":"may derive from a GMO crop, source not disclosed on label"},{"term":"stabilizer  methyl cellulose","normalized":"ambiguous derivative","kind":"ambiguous","detail":"may derive from a GMO crop, source not disclosed on label"},{"term":"fruit and vegetable concentrate  betterave","normalized":"ambiguous derivative","kind":"ambiguous","detail":"may derive from a GMO crop, source not disclosed on label"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  '6430081490201', 'Oddlygood Wicked vanilla soygurt', 'Oddlygood',
+  'gmo_food', 'packaged_food',
+  'Water, 9% peeled soybeans (North-America), sugar, polydextrose (dietary fibre), sugarcane, modified starch, vitamins (D2, riboflavin (B2), B12, folic acid), calcium, aromas, stabiliser (pectin), salt, ground vanilla pod, acidity regulator (citric acid), preservative (potassium sorbate), starter.',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"9  peeled soybeans  north-america","normalized":"soy","kind":"explicit","detail":"soy"},{"term":"acidity regulator  citric acid","normalized":"ambiguous derivative","kind":"ambiguous","detail":"may derive from a GMO crop, source not disclosed on label"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  '0068400662600', 'Mayonnaise –', 'Hellmann''s',
+  'gmo_food', 'packaged_food',
+  'Canola oil, water, liquid whole egg, vinegar, liquid egg yolk, salt, sugar, spice, concentrated lemon juice, calcium disodium EDTA.',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"canola oil","normalized":"canola","kind":"explicit","detail":"canola"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  NULL, 'Wild salmon fillets', 'Sainsbury''s',
+  'gmo_food', 'packaged_food',
+  'pink salmon (oncorhynchus gorbuscha)',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"pink salmon  oncorhynchus gorbuscha","normalized":"salmon","kind":"explicit","detail":"salmon"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  '0096619256976', 'Smoked Salmon –', 'Kirkland Signature',
+  'gmo_food', 'packaged_food',
+  'smoked salmon',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"smoked salmon","normalized":"salmon","kind":"explicit","detail":"salmon"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+),
+(
+  '5099874252436', 'Papaya Goats Cheese', 'Dunnes Stores',
+  'gmo_food', 'packaged_food',
+  'Goat''s Cheese (83%) [Pasteurised Goat''s Milk, Salt, Sequestrant: Calcium Chloride; Vegetarian Rennet, Lactic Acid Starter Culture (Milk)], Papaya (17%) [Papaya, Cane Sugar].',
+  'medium', 'Medium GMO Likelihood', 'high',
+  '[{"term":"papaya  17    papaya","normalized":"papaya","kind":"explicit","detail":"papaya"}]'::jsonb,
+  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
+  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+);
 
 commit;

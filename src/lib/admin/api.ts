@@ -37,3 +37,25 @@ export async function requireAdmin(): Promise<AdminGuardResult> {
 export function isAdminSession(result: AdminGuardResult): result is AdminSession {
   return "supabase" in result
 }
+
+// Same guard as requireAdmin but for superadmin-only actions (creating admin
+// accounts). Reused by /api/admin/create and the /admin/admins page. Profiles
+// are the source of truth, never auth metadata (SEC-03).
+export async function requireSuperAdmin(): Promise<AdminGuardResult> {
+  const supabase = await getUserServerSupabase()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { response: Response.json({ error: "unauthorized" }, { status: 401 }) }
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+
+  if (profile?.role !== "superadmin") {
+    return { response: Response.json({ error: "forbidden" }, { status: 403 }) }
+  }
+
+  return { supabase, userId: user.id, email: user.email ?? null }
+}

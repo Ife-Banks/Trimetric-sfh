@@ -19,13 +19,15 @@
       { "crop_family": "apple", "aliases": ["apple"] },
       { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
       { "crop_family": "potato", "aliases": ["potato"] },
-      { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] }
+      { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] },
+      { "crop_family": "salmon", "aliases": ["salmon", "pink salmon", "red salmon", "smoked salmon", "natural salmon", "oncorhynchus gorbuscha", "oncorhynchus nerka"] }
     ]
   },
   "ambiguous_derivative_matches": {
-    "note": "Ingredients that MAY derive from a GMO crop but the label does not disclose the source. Presence lowers confidence, not likelihood.",
+    "note": "Ingredients that MAY derive from a GMO crop but the label does not disclose the source. Presence lowers confidence, not likelihood. The 'any unspecified vegetable [X]' catch-all is enforced in engine code (gmoEngine.classifyToken), not as fixed phrases here.",
     "entries": [
       { "ingredient": "citric acid", "possible_sources": ["corn", "beet", "synthetic"] },
+      { "ingredient": "food acid", "possible_sources": ["corn", "beet", "synthetic"] },
       { "ingredient": "ascorbic acid", "possible_sources": ["corn", "synthetic"] },
       { "ingredient": "maltodextrin", "possible_sources": ["corn", "rice", "potato"] },
       { "ingredient": "vegetable oil (unspecified)", "possible_sources": ["soy", "canola", "corn", "palm"] },
@@ -34,14 +36,13 @@
       { "ingredient": "sugar (unspecified)", "possible_sources": ["sugar beet", "sugarcane"] },
       { "ingredient": "molasses", "possible_sources": ["sugar beet", "sugarcane"] },
       { "ingredient": "cellulose", "possible_sources": ["various plant sources"] },
-      { "ingredient": "soy hemoglobin", "possible_sources": ["soy"] },
-      { "ingredient": "vegetable", "possible_sources": ["unspecified 'vegetable X' term"] }
+      { "ingredient": "soy hemoglobin", "possible_sources": ["soy"] }
     ]
   },
   "low_risk_tokens": [
     "salt", "water", "vinegar", "pepper", "garlic", "onion", "spices",
     "sugar", "molasses", "honey", "oil", "vegetable oil", "flour", "rice",
-    "natural flavors", "natural flavoring", "monk fruit", "stevia",
+    "wheat", "natural flavors", "natural flavoring", "monk fruit", "stevia",
     "xanthan gum", "citric acid", "fruit juice", "puree", "vinegar"
   ],
   "likelihood_scoring": {
