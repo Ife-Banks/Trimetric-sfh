@@ -4,6 +4,7 @@ import { useCallback, useEffect, useSyncExternalStore, useState } from "react";
 import { CameraView } from "@/components/capture/CameraView";
 import { CaptureGuide } from "@/components/capture/CaptureGuide";
 import { ImagePreview } from "@/components/capture/ImagePreview";
+import { AnalyzingPipeline } from "@/components/capture/AnalyzingPipeline";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
 import type { IdentificationResult, ProductRow } from "@/lib/identification/productIdentification";
 import type { OcrProgress, RecognizeResult } from "@/lib/ocr/types";
@@ -13,7 +14,6 @@ import { PageContainer, PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Panel } from "@/components/ui/panel";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -73,6 +73,7 @@ export default function ScanPage() {
   const [front, setFront] = useState<Capture | null>(null);
   const [back, setBack] = useState<Capture | null>(null);
   const [progress, setProgress] = useState<OcrProgress | null>(null);
+  const [pipelineStage, setPipelineStage] = useState(0);
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Category routing is FR-4 (Phase 4). Until real routing lands the user picks
@@ -135,6 +136,7 @@ export default function ScanPage() {
     setStep("analyzing");
     setError(null);
     setProgress(null);
+    setPipelineStage(0);
     try {
       // Lazy-load OCR and the engines only when the user runs the scan.
       const [
@@ -156,6 +158,7 @@ export default function ScanPage() {
       const supabase = getSupabaseBrowser();
       // Downscale to ~1600px long edge before recognition (§6 of the frontend arch).
       const frontImg = await downscaleBlob(front.blob);
+      setPipelineStage(1); // catalogue check
 
       let identification: IdentificationResult | null = null;
       let frontOcr: RecognizeResult | null = null;
@@ -173,16 +176,19 @@ export default function ScanPage() {
           .maybeSingle();
         if (data) {
           identification = { tier: 1, identityMatch: "barcode", barcode, product: data as ProductRow };
+          setPipelineStage(3); // stored verdict → scoring (OCR stages skipped)
         }
       }
 
       if (!identification) {
         const client = getOcrClient();
         const backImg = await downscaleBlob(back.blob);
+        setPipelineStage(2); // reading labels
         frontOcr = await client.recognize(frontImg, setProgress);
         backOcr = await client.recognize(backImg, setProgress);
 
         // Tiers 1 → 2 (barcode already in-record or not), returning early on a match.
+        setPipelineStage(3); // identifying by name
         identification = await identifyProduct({
           frontImage: frontImg,
           frontText: frontOcr.text,
@@ -203,6 +209,7 @@ export default function ScanPage() {
           product?.subcategory ?? (category === "gmo_food" ? "packaged_food" : "oral_care_product"),
       };
 
+      setPipelineStage(4); // scoring verdict
       // FR-6: stored verdict → EngineResult when we matched the catalogue;
       // otherwise run the rules engine on the OCR'd ingredients text.
       const engineResult: EngineResult = product
@@ -269,14 +276,17 @@ export default function ScanPage() {
       )}
 
       {step === "analyzing" && (
-        <Panel variant="elevated" className="mt-6 space-y-3">
-          <p className="text-sm font-medium" aria-live="polite">
-            {progress?.label ?? "Preparing OCR…"}
-          </p>
-          <Progress value={Math.round((progress?.progress ?? 0) * 100)} aria-label="OCR progress" />
-          <p className="text-xs text-muted-foreground">
-            {Math.round((progress?.progress ?? 0) * 100)}%
-          </p>
+        <Panel variant="elevated" className="mt-6">
+          <h2 className="text-h3 font-semibold" aria-live="polite">
+            Reading your labels…
+          </h2>
+          <div className="mt-4">
+            <AnalyzingPipeline
+              stage={pipelineStage}
+              percent={progress ? progress.progress * 100 : undefined}
+              note={progress?.label}
+            />
+          </div>
         </Panel>
       )}
 
@@ -350,7 +360,7 @@ function DiagnosticPanel({
   return (
     <div className="space-y-5">
       <Panel variant="inset">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-overline uppercase text-muted-foreground">
           Identification (FR-2)
         </h2>
         <p className="mt-2 text-sm">
@@ -391,7 +401,7 @@ function DiagnosticPanel({
       </Panel>
 
       <Panel variant="inset">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-overline uppercase text-muted-foreground">
           EngineResult metadata
         </h2>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -405,7 +415,7 @@ function DiagnosticPanel({
       </Panel>
 
       <Panel variant="inset">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="text-overline uppercase text-muted-foreground">
           EngineContext (01_TECHNICAL_SPECIFICATION §5.1)
         </h2>
         <pre className="mt-2 overflow-x-auto rounded-xl bg-muted p-3 text-xs leading-relaxed">
@@ -441,7 +451,7 @@ function DiagnosticPanel({
 function OcrText({ title, ocr }: { title: string; ocr: RecognizeResult }) {
   return (
     <Panel variant="hairline">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <h2 className="text-overline uppercase text-muted-foreground">
         {title}
       </h2>
       <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap font-sans text-sm leading-relaxed">

@@ -10,7 +10,7 @@ export function ConstraintNotice({ notice }: { notice: string }) {
     <aside
       role="note"
       aria-label="Constraint notice"
-      className="flex items-start gap-3 rounded-xl border bg-muted px-4 py-3 text-sm text-muted-foreground"
+      className="flex items-start gap-3 rounded-lg border border-border/50 border-l-[3px] border-l-info bg-info/10 px-4 py-3 text-sm text-muted-foreground"
     >
       <Info className="mt-0.5 size-4 shrink-0 opacity-60" aria-hidden="true" />
       <p>{notice}</p>

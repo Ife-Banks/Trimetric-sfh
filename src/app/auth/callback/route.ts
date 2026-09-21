@@ -13,13 +13,13 @@ export async function GET(request: Request) {
   const next = safeNextPath(url.searchParams.get("next"))
 
   if (!code) {
-    return NextResponse.redirect(new URL("/auth/login?error=callback_failed", request.url))
+    return NextResponse.redirect(new URL("/login?error=callback_failed", request.url))
   }
 
   const supabase = await getUserServerSupabase()
   const { error } = await supabase.auth.exchangeCodeForSession(code)
   if (error) {
-    return NextResponse.redirect(new URL("/auth/login?error=callback_failed", request.url))
+    return NextResponse.redirect(new URL("/login?error=callback_failed", request.url))
   }
 
   return NextResponse.redirect(new URL(next, request.url))

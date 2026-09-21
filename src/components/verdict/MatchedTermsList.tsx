@@ -59,10 +59,8 @@ export function MatchedTermsList({ terms }: { terms: EngineTerm[] }) {
           <div key={kind}>
             <div className="flex items-center gap-2">
               <span aria-hidden="true" className={cn("size-2 rounded-full", KIND_DOT[kind])} />
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {GROUP_LABEL[kind]}
-              </h3>
-              <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
+              <h3 className="text-overline uppercase text-muted-foreground">{GROUP_LABEL[kind]}</h3>
+              <span className="rounded-full bg-muted px-2 py-1 text-xs tabular-nums text-muted-foreground">
                 {items.length}
               </span>
             </div>
@@ -71,7 +69,7 @@ export function MatchedTermsList({ terms }: { terms: EngineTerm[] }) {
                 <li key={`${term.term}-${i}`}>
                   <Badge
                     variant="secondary"
-                    className="flex-wrap whitespace-normal rounded-lg px-2.5 py-1 text-sm font-normal"
+                    className="flex-wrap whitespace-normal rounded-lg px-3 py-1 text-sm font-normal"
                   >
                     <span className="font-medium capitalize">{term.term}</span>
                     {term.detail && (

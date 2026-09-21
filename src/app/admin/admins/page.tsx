@@ -13,7 +13,7 @@ export default async function AdminUsersPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/login?next=/admin/admins")
+  if (!user) redirect("/login?next=/admin/admins")
 
   const { data: profile } = await supabase
     .from("profiles")

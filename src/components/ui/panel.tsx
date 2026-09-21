@@ -5,11 +5,11 @@ import { cn } from "cn"
 //   elevated — card (border + card surface + shadow) for primary containers
 //   inset    — muted technical/inset area (no visible border)
 //   hairline — section box (border on the page background)
-const panelVariants = cva("rounded-xl border", {
+const panelVariants = cva("rounded-lg border border-border/80", {
   variants: {
     variant: {
-      elevated: "bg-card text-card-foreground shadow-sm",
-      inset: "border-transparent bg-muted/50",
+      elevated: "bg-surface text-card-foreground shadow-sm",
+      inset: "border-transparent bg-surface-muted/60",
       hairline: "bg-background",
     },
     padding: {

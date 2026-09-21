@@ -13,14 +13,14 @@ const tierStyles: Record<ResultTier, string> = {
   medium:
     "border-warning/35 bg-warning/10 text-warning dark:border-warning/40 dark:bg-warning/15",
   high: "border-destructive/30 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/15",
-  none: "border bg-muted text-muted-foreground",
+  none: "border border-border/60 bg-tier-none/10 text-tier-none",
 }
 
 const tierDot: Record<ResultTier, string> = {
   low: "bg-success",
   medium: "bg-warning",
   high: "bg-destructive",
-  none: "bg-muted-foreground",
+  none: "bg-tier-none",
 }
 
 export function ResultBadge({ tier, label }: { tier: ResultTier; label: string }) {

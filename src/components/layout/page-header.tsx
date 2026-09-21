@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { cn } from "cn"
+import { Overline } from "@/components/ui/overline"
 
 // PageContainer + PageHeader — the shared page shell. Enforces a consistent
 // measure per page type and a consistent title/description/actions header so
@@ -23,7 +24,7 @@ function PageContainer({
       data-slot="page-container"
       id="main"
       tabIndex={-1}
-      className={cn("mx-auto w-full flex-1 px-4 py-8 outline-none", WIDTHS[size], className)}
+      className={cn("mx-auto w-full flex-1 px-5 py-8 outline-none md:px-8", WIDTHS[size], className)}
       {...props}
     />
   )
@@ -41,13 +42,9 @@ function PageHeader({ eyebrow, title, description, actions, className }: PageHea
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-3", className)}>
       <div className="min-w-0">
-        {eyebrow && (
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {eyebrow}
-          </p>
-        )}
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+        {eyebrow && <Overline>{eyebrow}</Overline>}
+        <h1 className="text-h1 font-bold tracking-tight">{title}</h1>
+        {description && <p className="mt-1 text-body text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
     </div>

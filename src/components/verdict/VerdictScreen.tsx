@@ -2,10 +2,12 @@
 
 // VerdictScreen — the SHARED seam (03_FRONTEND_ARCHITECTURE.md §3). Renders an
 // EngineResult whether it came from gmoEngine, fluorideEngine (Phase 6), or a
-// stored verified product row mapped into the same shape (FR-6). Adding a third
-// category requires zero changes here. Required elements, in order:
-// product identity → ResultBadge → ConfidenceBadge → guidance → matched terms
-// → ConstraintNotice (never dismissible) → submission CTA/form.
+// stored verified product row mapped into the same shape. Canonical order
+// (UI_UX_Redesign_Prompt §"Non-negotiable structural fix"): identity header →
+// result summary (ResultBadge) → result gauge (ResultGauge, real value only) →
+// ConfidenceBadge (separate chip, never merged) → guidance → product
+// information → matched terms → verification findings (confidence.factors) →
+// ConstraintNotice (never dismissible) → submission CTA/form.
 
 import { useState } from "react"
 import { ImageIcon } from "lucide-react"
@@ -13,11 +15,16 @@ import type { EngineResult } from "@/engines/types"
 import type { IdentityMatch } from "@/lib/identification/productIdentification"
 import { Button } from "@/components/ui/button"
 import { Panel } from "@/components/ui/panel"
+import { Overline } from "@/components/ui/overline"
 import { InlineAlert } from "@/components/ui/inline-alert"
+import { CategoryBadge } from "@/components/ui/category-badge"
 import { ResultBadge } from "./ResultBadge"
 import { ConfidenceBadge } from "./ConfidenceBadge"
+import { ResultGauge } from "./ResultGauge"
+import { gaugeValue } from "./gaugeValue"
 import { MatchedTermsList } from "./MatchedTermsList"
 import { ConstraintNotice } from "./ConstraintNotice"
+import { VerificationFindings } from "./VerificationFindings"
 import { SubmissionForm, type SubmissionPrefill } from "./SubmissionForm"
 
 export interface ProductIdentity {
@@ -59,7 +66,8 @@ export function VerdictScreen({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Header — product identity + screen eyebrow */}
       <header className="flex items-start gap-4">
         {identity.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- local object URL from the camera; next/image can't optimize blob: URLs
@@ -74,29 +82,53 @@ export function VerdictScreen({
           </div>
         )}
         <div className="min-w-0">
-          <h2 className="truncate text-lg font-semibold tracking-tight">{identity.name || "Unidentified product"}</h2>
+          <Overline>Diagnostic result</Overline>
+          <h2 className="mt-1 truncate text-h2 font-semibold tracking-tight">
+            {identity.name || "Unidentified product"}
+          </h2>
           {identity.brand && <p className="text-sm text-muted-foreground">{identity.brand}</p>}
-          {identity.barcode && (
-            <p className="text-xs text-muted-foreground">Barcode {identity.barcode}</p>
-          )}
-          <p className="mt-0.5 text-xs text-muted-foreground">{MATCH_NOTE[identity.matchedBy]}</p>
         </div>
       </header>
 
-      {/* Result and Confidence as two SEPARATE badges, never merged (06_AGENT_CONTEXT §2.1). */}
-      <div className="flex flex-wrap items-center gap-4">
+      {/* Result cluster — summary (pill) → gauge → confidence. The gauge shows
+          the RESULT only (tier + real value); confidence is a separate chip of
+          a different shape, never merged (08 §2, 06_AGENT_CONTEXT §2). */}
+      <section aria-label="Result" className="flex flex-col items-center gap-5 py-2">
         <ResultBadge tier={result.result.tier} label={result.result.label} />
+        <ResultGauge tier={result.result.tier} value={gaugeValue(result, ingredientsText)} />
         <ConfidenceBadge tier={result.confidence.tier} factors={result.confidence.factors} />
-      </div>
+      </section>
 
-      <p className="text-sm leading-relaxed text-muted-foreground">{result.guidance}</p>
+      <p className="text-body leading-relaxed text-muted-foreground">{result.guidance}</p>
 
-      <Panel variant="hairline">
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          What was found
-        </h3>
-        <MatchedTermsList terms={result.matchedTerms} />
+      <Panel variant="hairline" padding="md">
+        <Overline>Product information</Overline>
+        <dl className="mt-3 space-y-3 text-sm">
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-muted-foreground">Category</dt>
+            <dd>
+              <CategoryBadge category={result.category} />
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-muted-foreground">Barcode</dt>
+            <dd className="text-right tabular-nums">{identity.barcode || "No barcode"}</dd>
+          </div>
+          <div className="flex items-start justify-between gap-4">
+            <dt className="pt-px text-muted-foreground">Identified as</dt>
+            <dd className="text-right">{MATCH_NOTE[identity.matchedBy]}</dd>
+          </div>
+        </dl>
       </Panel>
+
+      <Panel variant="hairline" padding="md">
+        <Overline>What was found</Overline>
+        <div className="mt-3">
+          <MatchedTermsList terms={result.matchedTerms} />
+        </div>
+      </Panel>
+
+      <VerificationFindings factors={result.confidence.factors} />
 
       <ConstraintNotice notice={result.constraintNotice} />
 
@@ -125,7 +157,7 @@ export function VerdictScreen({
             Verify this with a human — submit a correction
           </Button>
         ) : (
-          <Button type="button" variant="outline" onClick={() => setFormOpen(true)}>
+          <Button type="button" variant="outline" className="w-full" onClick={() => setFormOpen(true)}>
             Something look wrong? Submit a correction
           </Button>
         )}

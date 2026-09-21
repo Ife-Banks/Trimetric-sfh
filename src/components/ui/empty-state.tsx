@@ -17,18 +17,18 @@ function EmptyState({ icon, title, description, action, className }: EmptyStateP
     <div
       data-slot="empty-state"
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center",
+        "flex flex-col items-center gap-3 rounded-lg border border-dashed border-border/70 px-6 py-12 text-center",
         className
       )}
     >
       {icon && (
-        <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground/70">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground/70">
           {icon}
         </div>
       )}
       <div className="space-y-1">
-        <p className="text-sm font-semibold">{title}</p>
-        {description && <p className="mx-auto max-w-sm text-sm text-muted-foreground">{description}</p>}
+        <p className="text-h3 font-semibold">{title}</p>
+        {description && <p className="mx-auto max-w-sm text-caption text-muted-foreground">{description}</p>}
       </div>
       {action && <div className="mt-1">{action}</div>}
     </div>

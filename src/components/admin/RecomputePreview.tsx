@@ -8,6 +8,7 @@ import type { EngineResult } from "@/engines/types"
 import { ResultBadge } from "@/components/verdict/ResultBadge"
 import { ConfidenceBadge } from "@/components/verdict/ConfidenceBadge"
 import { MatchedTermsList } from "@/components/verdict/MatchedTermsList"
+import { Overline } from "@/components/ui/overline"
 import { Panel } from "@/components/ui/panel"
 
 export function RecomputePreview({ result }: { result: EngineResult | null }) {
@@ -21,9 +22,7 @@ export function RecomputePreview({ result }: { result: EngineResult | null }) {
 
   return (
     <Panel variant="inset" className="space-y-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Recomputed verdict (config v{result.configVersion})
-      </p>
+      <Overline>Recomputed verdict (config v{result.configVersion})</Overline>
       <div className="flex flex-wrap items-center gap-3">
         <ResultBadge tier={result.result.tier} label={result.result.label} />
         <ConfidenceBadge tier={result.confidence.tier} factors={result.confidence.factors} />

@@ -14,6 +14,7 @@ import type { SubmissionForReview } from "@/lib/admin/recompute"
 import { composeScoringText, recomputeVerdict } from "@/lib/admin/recompute"
 import { RecomputePreview } from "@/components/admin/RecomputePreview"
 import { ConstraintNotice } from "@/components/verdict/ConstraintNotice"
+import { CategoryBadge } from "@/components/ui/category-badge"
 import { GMO_CONSTRAINT_NOTICE } from "@/engines/gmoEngine"
 import { InlineAlert } from "@/components/ui/inline-alert"
 import { Button } from "@/components/ui/button"
@@ -36,13 +37,12 @@ const CERT_NONE = "none"
 
 const CERT_OPTIONS: string[] = config.certification_short_circuit.terms
 
-const CATEGORY_LABEL: Record<SubmissionForReview["category"], string> = {
-  gmo_food: "Food (GMO)",
-  oral_care: "Oral care (fluoride)",
-}
-
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
+}
+
+function ocrLabel(submission: SubmissionForReview): string {
+  return submission.ocr_confidence != null ? `${submission.ocr_confidence.toFixed(0)}%` : "—"
 }
 
 export function SubmissionRow({ submission }: { submission: SubmissionForReview }) {
@@ -141,51 +141,70 @@ export function SubmissionRow({ submission }: { submission: SubmissionForReview 
   }
 
   return (
-    <li className="rounded-xl border bg-card">
+    <li className="rounded-lg border bg-surface shadow-sm">
       <button
         type="button"
         onClick={() => void onToggle()}
         aria-expanded={open}
-        className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+        className={cn(
+          "flex min-h-12 w-full flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 text-left transition-colors outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "md:grid md:grid-cols-[minmax(0,1fr)_11rem_9rem_5rem_2rem] md:gap-4 md:px-5",
+          open && "border-b bg-surface-muted/60 hover:bg-surface-muted"
+        )}
       >
         <span className="min-w-0">
-          <span className="block truncate text-sm font-semibold">{submission.product_name}</span>
+          <span className="block truncate text-sm font-semibold">
+            {submission.product_name || "Unnamed product"}
+          </span>
           <span className="block text-xs text-muted-foreground">
-            {submission.brand || "Unbranded"} · {CATEGORY_LABEL[submission.category]} ·{" "}
-            {formatDate(submission.created_at)}
+            {submission.brand || "Unbranded"} · {formatDate(submission.created_at)}
           </span>
         </span>
-        <span className="flex items-center gap-2 text-xs">
-          <StatusBadge variant="neutral" icon={<ScanText />}>
-            OCR {submission.ocr_confidence != null ? `${submission.ocr_confidence.toFixed(0)}%` : "—"}
-          </StatusBadge>
-          <ChevronDown
-            className={cn(
-              "size-4 text-muted-foreground transition-transform duration-200",
-              open && "rotate-180"
-            )}
-            aria-hidden="true"
-          />
+
+        <CategoryBadge category={submission.category} />
+
+        <span className="hidden text-xs text-muted-foreground md:flex md:items-center md:self-center">
+          {new Date(submission.created_at).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
         </span>
+
+        <StatusBadge
+          variant="neutral"
+          icon={<ScanText />}
+          className="hidden md:inline-flex"
+        >
+          OCR {ocrLabel(submission)}
+        </StatusBadge>
+
+        <ChevronDown
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-200 md:justify-self-end md:self-center",
+            open && "rotate-180"
+          )}
+          aria-hidden="true"
+        />
       </button>
 
       {open && (
-        <div className="space-y-4 border-t p-4">
+        <div className="space-y-4 border-t p-4 md:p-5">
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Subcategory</dt>
+              <dt className="text-overline uppercase text-muted-foreground">Subcategory</dt>
               <dd className="mt-0.5">{submission.subcategory || "—"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Barcode</dt>
+              <dt className="text-overline uppercase text-muted-foreground">Barcode</dt>
               <dd className="mt-0.5">{submission.barcode || "—"}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Submitted</dt>
+              <dt className="text-overline uppercase text-muted-foreground">Submitted</dt>
               <dd className="mt-0.5">{formatDate(submission.created_at)}</dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">OCR confidence</dt>
+              <dt className="text-overline uppercase text-muted-foreground">OCR confidence</dt>
               <dd className="mt-0.5">
                 {submission.ocr_confidence != null ? `${submission.ocr_confidence.toFixed(0)}%` : "—"}
               </dd>
@@ -194,7 +213,7 @@ export function SubmissionRow({ submission }: { submission: SubmissionForReview 
 
           {submission.photo_path ? (
             <figure>
-              <figcaption className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <figcaption className="mb-1.5 text-overline uppercase text-muted-foreground">
                 Submitted photo
               </figcaption>
               {photoUrl ? (

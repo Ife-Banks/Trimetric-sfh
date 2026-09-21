@@ -83,7 +83,7 @@ export function NewPasswordForm() {
 
   if (status === "success") {
     return (
-      <div className="mt-6 rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+      <div className="mt-6 rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
         Password updated. Sign in with your new password.
       </div>
     )

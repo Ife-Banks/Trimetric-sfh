@@ -1,70 +1,113 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Design tokens — source of truth: docs/08_DESIGN_SYSTEM.md §1.
+   Light theme is the primary identity; dark is secondary using the same
+   tokens (never the other way around). Layout tokens (radii, shadows) use
+   the 4px base unit. All true colour values live here — component code
+   references tokens, never raw hex. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --radius: 0.625rem;
-
+  --background: #f5fbfa;
+  --foreground: #0f1b19;
+  --surface: #ffffff;
+  --surface-muted: #eef6f5;
   --card: #ffffff;
-  --card-foreground: #171717;
+  --card-foreground: #0f1b19;
   --popover: #ffffff;
-  --popover-foreground: #171717;
-  /* Brand accent — "label-lens" teal-green. Drives primary CTAs, links, and progress. */
-  --primary: oklch(0.44 0.07 172);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --popover-foreground: #0f1b19;
 
-  /* Semantic status palette — tinted-surface bases (bg via /10–/15, text via the token).
-     Light values are darkened for AA contrast against white surfaces. */
-  --success: oklch(0.5 0.11 152);
-  --warning: oklch(0.58 0.14 70);
-  --info: oklch(0.5 0.12 255);
-  --danger: oklch(0.577 0.245 27.325);
+  /* Brand — confident mid-blue (primary CTA, links, active nav, focus rings). */
+  --primary: #1e5aa8;
+  --primary-foreground: #ffffff;
+
+  --secondary: #eef6f5;
+  --secondary-foreground: #0f1b19;
+  --muted: #eef6f5;
+  --muted-foreground: #5b6b68;
+  --accent: #eef6f5;
+  --accent-foreground: #0f1b19;
+  --destructive: #c7473f;
+  --destructive-foreground: #ffffff;
+  --border: #dceae8;
+  --input: #dceae8;
+  --ring: #1e5aa8;
+
+  /* Semantic tiers — result + status language (green/amber/red). */
+  --success: #1f9d6b;
+  --warning: #c98a1f;
+  --info: #2e7bc4;
+  --danger: #c7473f;
+
+  /* Category accents — wayfinding system (green = GMO/food, blue = oral care).
+     Never swap this mapping per screen. */
+  --accent-gmo: #1f9d6b;
+  --accent-gmo-soft: #e4f7ee;
+  --accent-fluoride: #2e7bc4;
+  --accent-fluoride-soft: #e6f1fb;
+
+  /* Confidence — blue/gray trust hues, deliberately outside the
+     green/amber/red result family (06_AGENT_CONTEXT.md §2). */
+  --confidence-high: #2e7bc4;
+  --confidence-medium: #5b9dbf;
+  --confidence-low: #8a9490;
+  --tier-none: #8a9490;
+
+  /* Brand gradients — entry / marketing surfaces only, light theme. */
+  --brand-gradient-start: #dff7f1;
+  --brand-gradient-end: #f0fbff;
+
+  --radius: 1rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.72 0.09 172);
-    --primary-foreground: oklch(0.2 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.985 0 0);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --background: #0b1614;
+    --foreground: #eaf3f1;
+    --surface: #101e1b;
+    --surface-muted: #16241f;
+    --card: #101e1b;
+    --card-foreground: #eaf3f1;
+    --popover: #101e1b;
+    --popover-foreground: #eaf3f1;
 
-    --success: oklch(0.75 0.12 155);
-    --warning: oklch(0.8 0.13 78);
-    --info: oklch(0.73 0.11 255);
-    --danger: oklch(0.704 0.191 22.216);
+    --primary: #4c8de0;
+    --primary-foreground: #0b1614;
+
+    --secondary: #16241f;
+    --secondary-foreground: #eaf3f1;
+    --muted: #16241f;
+    --muted-foreground: #9ab0ac;
+    --accent: #16241f;
+    --accent-foreground: #eaf3f1;
+    --destructive: #e07a6f;
+    --destructive-foreground: #ffffff;
+    --border: #20302c;
+    --input: #20302c;
+    --ring: #4c8de0;
+
+    --success: #3dba86;
+    --warning: #d9a13b;
+    --info: #5b9dbf;
+    --danger: #e07a6f;
+
+    --accent-gmo: #3dba86;
+    --accent-gmo-soft: #14231d;
+    --accent-fluoride: #4c8de0;
+    --accent-fluoride-soft: #14212e;
+
+    --confidence-high: #6fa8c8;
+    --confidence-medium: #7eb2d0;
+    --confidence-low: #7c8a86;
+    --tier-none: #7c8a86;
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-card: var(--card);
@@ -88,16 +131,86 @@
   --color-warning: var(--warning);
   --color-info: var(--info);
   --color-danger: var(--danger);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-accent-gmo: var(--accent-gmo);
+  --color-accent-gmo-soft: var(--accent-gmo-soft);
+  --color-accent-fluoride: var(--accent-fluoride);
+  --color-accent-fluoride-soft: var(--accent-fluoride-soft);
+
+  --color-confidence-high: var(--confidence-high);
+  --color-confidence-medium: var(--confidence-medium);
+  --color-confidence-low: var(--confidence-low);
+  --color-tier-none: var(--tier-none);
+
+  --color-brand-gradient-start: var(--brand-gradient-start);
+  --color-brand-gradient-end: var(--brand-gradient-end);
+
+  /* Spacing scale — 4px base unit, named steps per 08 §1.3. These are the
+     ONLY spacing increments shared components may use; off-scale pixel values
+     (e.g. p-3.5, mt-13) are disallowed by 08 §6. */
+  --spacing-1: 0.25rem; /* 4px */
+  --spacing-2: 0.5rem; /* 8px */
+  --spacing-3: 0.75rem; /* 12px */
+  --spacing-4: 1rem; /* 16px */
+  --spacing-5: 1.25rem; /* 20px */
+  --spacing-6: 1.5rem; /* 24px */
+  --spacing-8: 2rem; /* 32px */
+  --spacing-10: 2.5rem; /* 40px */
+  --spacing-12: 3rem; /* 48px */
+  --spacing-16: 4rem; /* 64px */
+
+  /* Radius scale — 8/12/16/20 per 08 §1.4. */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* Elevation — restrained; never exceed shadow-md (08 §1.5). */
+  --shadow-xs: 0 1px 2px rgba(15, 27, 25, 0.04);
+  --shadow-sm: 0 2px 8px rgba(15, 27, 25, 0.06);
+  --shadow-md: 0 8px 24px rgba(15, 27, 25, 0.1);
+
+  /* Type scale — 08 §1.2. Weights are encoded into the tokens so the
+     hierarchy (display/h1 700, h2/h3 600, body 400, label 500) holds even
+     when the weight class is omitted. Overline also carries its +0.04em
+     tracking from the token. */
+  --text-display: 1.75rem / 2.125rem;
+  --text-display--font-weight: 700;
+  --text-h1: 1.375rem / 1.75rem;
+  --text-h1--font-weight: 700;
+  --text-h2: 1.125rem / 1.5rem;
+  --text-h2--font-weight: 600;
+  --text-h3: 0.9375rem / 1.25rem;
+  --text-h3--font-weight: 600;
+  --text-body: 0.875rem / 1.25rem;
+  --text-body--font-weight: 400;
+  --text-body-strong: 0.875rem / 1.25rem;
+  --text-body-strong--font-weight: 600;
+  --text-label: 0.8125rem / 1rem;
+  --text-label--font-weight: 500;
+  --text-caption: 0.75rem / 1rem;
+  --text-caption--font-weight: 400;
+  --text-overline: 0.6875rem / 0.875rem;
+  --text-overline--font-weight: 600;
+  --text-overline--letter-spacing: 0.04em;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans);
+}
+
+/* Brand gradient — entry/marketing surfaces only (onboarding, auth). Light
+   theme only; dark mode falls back to the plain background. */
+.bg-brand-gradient {
+  background: linear-gradient(180deg, var(--brand-gradient-start), var(--brand-gradient-end));
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-brand-gradient {
+    background: var(--background);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

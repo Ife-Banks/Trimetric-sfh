@@ -34,7 +34,7 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="mt-6 rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+      <div className="mt-6 rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
         If an account exists for <span className="font-medium">{email}</span>, a reset link is on
         its way. Follow it to choose a new password.
       </div>

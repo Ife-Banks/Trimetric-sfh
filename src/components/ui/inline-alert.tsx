@@ -11,15 +11,15 @@ import {
 // InlineAlert — the ONE non-blocking message language (form errors, camera
 // errors, scan failures). Page-level failures keep using the Alert component.
 const inlineAlertVariants = cva(
-  "flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm",
+  "flex items-start gap-3 rounded-lg border border-border/50 border-l-[3px] px-4 py-3 text-sm",
   {
     variants: {
       variant: {
-        destructive: "border-destructive/30 bg-destructive/10 text-destructive",
-        warning: "border-warning/35 bg-warning/10 text-warning",
-        success: "border-success/30 bg-success/10 text-success",
-        info: "border-info/30 bg-info/10 text-info",
-        neutral: "border-border bg-muted text-muted-foreground",
+        destructive: "border-l-destructive bg-destructive/10 text-destructive",
+        warning: "border-l-warning bg-warning/10 text-warning",
+        success: "border-l-success bg-success/10 text-success",
+        info: "border-l-info bg-info/10 text-info",
+        neutral: "border-l-border bg-muted text-muted-foreground",
       },
     },
     defaultVariants: {

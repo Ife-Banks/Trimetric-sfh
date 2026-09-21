@@ -10,6 +10,7 @@
 import { useId, useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { cn } from "cn"
+import { Overline } from "@/components/ui/overline"
 import type { VerdictTier } from "@/engines/types"
 
 type Tier = VerdictTier
@@ -17,22 +18,22 @@ type Tier = VerdictTier
 const tierStyles: Record<Tier, { chip: string; bar: string; bars: number; label: string }> = {
   high: {
     chip:
-      "border-violet-300 bg-violet-50 text-violet-900 dark:border-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
-    bar: "bg-violet-500",
+      "border-confidence-high/40 bg-confidence-high/10 text-confidence-high dark:border-confidence-high/50 dark:bg-confidence-high/15 dark:text-confidence-high",
+    bar: "bg-confidence-high",
     bars: 3,
     label: "High confidence",
   },
   medium: {
     chip:
-      "border-sky-300 bg-sky-50 text-sky-900 dark:border-sky-700 dark:bg-sky-950/60 dark:text-sky-300",
-    bar: "bg-sky-500",
+      "border-confidence-medium/40 bg-confidence-medium/10 text-confidence-medium dark:border-confidence-medium/50 dark:bg-confidence-medium/15 dark:text-confidence-medium",
+    bar: "bg-confidence-medium",
     bars: 2,
     label: "Medium confidence",
   },
   low: {
     chip:
-      "border-slate-300 bg-slate-100 text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300",
-    bar: "bg-slate-400",
+      "border-confidence-low/40 bg-confidence-low/15 text-confidence-low dark:border-confidence-low/50 dark:bg-confidence-low/15 dark:text-confidence-low",
+    bar: "bg-confidence-low",
     bars: 1,
     label: "Low confidence",
   },
@@ -74,7 +75,7 @@ export function ConfidenceBadge({
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         className={cn(
-          "flex items-center gap-2 rounded-lg border py-1.5 pl-2.5 pr-2 text-sm font-semibold transition-colors",
+          "flex min-h-12 items-center gap-2 rounded-md border py-2 pl-3 pr-2 text-sm font-semibold transition-colors",
           "hover:brightness-[0.98] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
           style.chip
         )}
@@ -87,21 +88,28 @@ export function ConfidenceBadge({
         />
       </button>
 
-      {open && (
-        <div
-          id={panelId}
-          className="ml-1 max-w-xs rounded-xl border bg-muted p-3 text-xs text-muted-foreground"
-        >
-          <p className="mb-1.5 font-semibold uppercase tracking-wide text-muted-foreground">
-            Why this confidence
-          </p>
-          <ul className="list-disc space-y-1 pl-4">
-            {factors.map((f) => (
-              <li key={f}>{f}</li>
-            ))}
-          </ul>
+      {/* 08 §4: expand/collapse 200ms ease-in-out via the grid-template-rows
+          trick (0fr → 1fr), never a fixed max-height guess. Kept mounted so
+          the collapse animates; hidden from AT when closed. */}
+      <div
+        id={panelId}
+        aria-hidden={!open}
+        className={cn(
+          "ml-1 grid max-w-xs overflow-hidden rounded-xl transition-[grid-template-rows,opacity] duration-200 ease-in-out",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="min-h-0">
+          <div className="rounded-xl border bg-muted p-3 text-xs text-muted-foreground">
+            <Overline>Why this confidence</Overline>
+            <ul className="mt-1.5 list-disc space-y-1 pl-4">
+              {factors.map((f) => (
+                <li key={f}>{f}</li>
+              ))}
+            </ul>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
