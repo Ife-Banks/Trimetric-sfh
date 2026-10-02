@@ -166,6 +166,18 @@ supabase db push       # runs every migration in supabase/migrations
   that permits `wasm-unsafe-eval` for Tesseract) are already declared in
   `next.config.ts`, and are applied **only when `NODE_ENV === "production"`** — so
   they switch on for the Vercel production build and are skipped in local dev.
+- **⚠ Do not remove `'unsafe-inline'` from `script-src`.** The App Router streams
+  its RSC payload through inline `<script>self.__next_f.push(…)</script>` tags;
+  with `script-src 'self'` the browser blocks them, React never receives the
+  streamed payload, and hydration dies with **"Connection closed"** (React #412).
+  The page still renders, so it looks like a mysterious blank/inert app rather
+  than a policy error. Removing it requires a per-request nonce (middleware + all
+  pages forced dynamic). `src/lib/security/csp.test.ts` fails if it goes missing.
+- **Vercel Toolbar**: the CSP allows `https://vercel.live` (script/connect/img/
+  frame/style/font) and `wss://ws-us3.pusher.com` so the preview toolbar and
+  comments work. If you would rather not allow it, disable the toolbar in
+  **Vercel → Project → Settings → General → Vercel Toolbar** and drop those
+  origins from the CSP.
 - The **mobile-only gate** ships as part of the UI: desktop visitors get the
   "Switch to a mobile device" notice instead of the app. `/admin` opts out of the
   gate (it is a desk task). If your stakeholders want to view the app on desktop,
