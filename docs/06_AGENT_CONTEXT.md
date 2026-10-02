@@ -156,9 +156,9 @@ Work through the pre-launch checklist in `05_SECURITY_ASSESSMENT.md`.
 
 **Regex safety.** Run engine matching inside the worker. Add a timeout guard — abort and return low confidence rather than hanging on a pathological pattern.
 
-**Product identification — three tiers, always in this order.** (1) Barcode, if decodable, exact match — skip OCR-based matching entirely. (2) No barcode or no match — fuzzy-match the OCR'd front-label name against `products.name` via trigram similarity (threshold ~0.6, see `02_SYSTEM_ARCHITECTURE.md` §6a). (3) No identity match at all — run the OCR'd ingredients text through the rules engine from a cold start. Tier 3 is not a rare fallback: expect it to be the common path for informally packaged or local-market products with no barcode. The ingredients text is always extracted regardless of which tier resolves the identity.
+**Product identification — name and ingredients only.** OCR both the front label and ingredients panel on every scan. Fuzzy-match the OCR'd product name against `products.name` within the selected category (threshold 0.4; strong match ≥0.8). Strong name matches use the stored verdict while preserving stored confidence; borderline matches use the stored verdict with confidence capped at Medium. With no name match, run the deterministic engine over the OCR'd ingredients. Barcode scanning is not part of the active scan flow; legacy barcode columns may remain in the database for compatibility.
 
-**Category routing.** Classify from barcode metadata or front-label keywords. If ambiguous, ask the user. Never guess, and never run both engines.
+**Category routing.** Use the selected scan category and scope catalogue name search to it. Never cross-match categories and never run both engines.
 
 **Images persist only on submission.** Do not upload every scan.
 
@@ -166,13 +166,23 @@ Work through the pre-launch checklist in `05_SECURITY_ASSESSMENT.md`.
 
 ## 8. Definition of done
 
-- [ ] Scan a packaged food product → GMO verdict with a separate confidence badge
-- [ ] Low-confidence scan → pre-filled submission form → row in `submissions`
-- [ ] Admin approves → row in `products` with full provenance
-- [ ] Re-scanning that product → High-confidence stored verdict via barcode, or a strong name match when no barcode exists
-- [ ] Same flow works for an oral-care product through `fluorideEngine`
-- [ ] Constraint notice visible on every GMO verdict
-- [ ] Anon-key test script passes; security checklist items 1–3 complete
+- [x] Scan a packaged food product → GMO verdict with a separate confidence badge
+- [x] Low-confidence scan → pre-filled submission form → row in `submissions`
+- [x] Admin approves → row in `products` with full provenance
+- [x] Re-scanning that product → stored verdict via a strong product-name match, or ingredient-engine screening when unmatched
+- [x] Same flow works for an oral-care product through `fluorideEngine`
+- [x] Constraint notice visible on every verdict (including the no-match screen)
+- [x] Service-role key handling correct; CI greps build output for it
+- [x] Component tests guard the two-badge constraint across all 9 tier
+      combinations (`verdict/badges.test.tsx`)
+- [x] Scan-pipeline integration tests over realistic OCR text, both categories
+- [ ] One end-to-end test: scan → low confidence → submit → appears in queue
+- [ ] `npm run test:rls` recorded as passing against the hosted project — the
+      script exists and is thorough, but it is still run by hand. It is not in
+      CI because it needs live credentials.
+- [ ] MFA enabled on all admin accounts (`ADMIN_MFA_REQUIRED=true` in the
+      deployment env). The code checks the session's assurance level and fails
+      closed, but the flag is off until TOTP is enrolled.
 
 ---
 

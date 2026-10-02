@@ -23,13 +23,17 @@ const ctx = globalThis as unknown as {
 
 type TesseractWorker = Awaited<ReturnType<typeof createWorker>>;
 
-const WORKER_PATH = "/vendor/tesseract/worker.min.js";
-const CORE_PATH = "/vendor/tesseract/tesseract-core-relaxedsimd-lstm.wasm.js";
-const LANG_PATH = "/vendor/tesseract/tessdata/";
+const assetUrl = (path: string) => new URL(path, globalThis.location.origin).href;
+const WORKER_PATH = assetUrl("/vendor/tesseract/worker.min.js");
+const CORE_PATH = assetUrl("/vendor/tesseract/tesseract-core-relaxedsimd-lstm.wasm.js");
+const LANG_PATH = assetUrl("/vendor/tesseract/tessdata/");
 
 let tesseract: TesseractWorker | null = null;
 let booting: Promise<TesseractWorker> | null = null;
 let progressSink: ((p: OcrProgress) => void) | null = null;
+// In-flight recognitions, so an abort can cancel the actual Tesseract work
+// rather than only discarding the result on the main thread.
+const inflight = new Set<{ id: string }>();
 
 function forwardProgress(status: string, mProgress: number): void {
   if (!progressSink) return;
@@ -125,14 +129,30 @@ async function handle(msg: OcrWorkerRequest): Promise<void> {
     return;
   }
 
+  // Stop waiting on a recognition the main thread already timed out on.
+  if (msg.type === "abort") {
+    const entry = [...inflight].find((x) => x.id === msg.id);
+    if (entry) inflight.delete(entry);
+    try {
+      await tesseract?.reinitialize();
+    } catch {
+      /* nothing useful to do; the next recognize() reinitialises as needed */
+    }
+    return;
+  }
+
   if (msg.type === "recognize") {
+    const entry = { id: msg.id };
+    inflight.add(entry);
     progressSink = (p) => ctx.postMessage({ id: msg.id, type: "progress", progress: p });
     try {
       const payload = await recognizing(msg.image);
       progressSink = null;
+      inflight.delete(entry);
       ctx.postMessage({ id: msg.id, type: "result", payload });
     } catch (err) {
       progressSink = null;
+      inflight.delete(entry);
       const message = err instanceof Error ? err.message : String(err);
       ctx.postMessage({ id: msg.id, type: "error", message });
     }

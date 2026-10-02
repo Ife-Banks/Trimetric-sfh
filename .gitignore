@@ -15,6 +15,11 @@
 # vitest cache
 /node_modules/.vite
 /vitest-result*.json
+# Playwright artifacts — traces and videos are large and per-run
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # next.js
 /.next/
@@ -25,13 +30,23 @@
 
 # misc
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.pem
 
-# debug
+# debug / logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.eslintcache
+
+# editor / IDE — local workspace state, not shared project config
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -48,3 +63,20 @@ next-env.d.ts
 # (eng.traineddata is ~23MB; vendored worker/core files ~17MB)
 /eng.traineddata
 /public/vendor/tesseract
+
+# supabase CLI local state — machine-specific. Contains the linked project ref,
+# pooler URL and component versions; never belongs in version control.
+/supabase/.temp/
+/supabase/.branches/
+
+# agent / AI tool state — local machine state and downloaded reference material
+# (linked project ids, Figma screenshots, full repo worktrees). Never application
+# source, and never shared between clones.
+/.kilo/
+/.kilocode/
+/.freebuff/
+/.claude/
+/.cursor/
+/.windsurf/
+/.continue/
+/.aider*

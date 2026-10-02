@@ -43,7 +43,7 @@ function SignalMeter({ level, barClass }: { level: number; barClass: string }) {
   return (
     <span
       aria-hidden="true"
-      className="flex h-5 w-6 shrink-0 items-end justify-end gap-0.5 rounded bg-black/5 p-0.5 dark:bg-white/10"
+      className="flex h-5 w-6 shrink-0 items-end justify-end gap-0.5 rounded bg-black/5 p-0.5 dark:bg-surface/10"
     >
       {[1, 2, 3].map((n) => (
         <span

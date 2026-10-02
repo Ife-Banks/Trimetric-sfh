@@ -5,6 +5,7 @@
 // difference between a stored verdict and a freshly computed one.
 
 import type { IdentityMatch, ProductRow } from "@/lib/identification/productIdentification"
+import { NAME_MATCH_STRONG, OCR_CONFIDENCE_PENALTY_THRESHOLD } from "./constants"
 import { GMO_CONSTRAINT_NOTICE } from "./gmoEngine"
 import { FLUORIDE_CONSTRAINT_NOTICE } from "./fluorideEngine"
 import type { EngineResult, EngineTerm, VerdictTier } from "./types"
@@ -26,6 +27,17 @@ function normalizeConfidenceTier(tier: ProductRow["confidence_tier"]): VerdictTi
 // reads `score` still sees a coherent value.
 function tierScore(tier: VerdictTier): number {
   return tier === "high" ? 4 : tier === "medium" ? 2 : 1
+}
+
+// One step down the confidence bands, matching the engines' −1 OCR point
+// (4→3 = high→medium, 2→1 = medium→low, 1→0 = low). A stored row keeps the
+// tier's floor, so it can never be pushed below "low".
+function downgradeTier(tier: VerdictTier): VerdictTier {
+  return tier === "high" ? "medium" : tier === "medium" ? "low" : "low"
+}
+
+function ocrPenaltyFactor(ocrMeanConfidence: number): string {
+  return `OCR quality — label text read at ${(ocrMeanConfidence * 100).toFixed(0)}% confidence, below the ${(OCR_CONFIDENCE_PENALTY_THRESHOLD * 100).toFixed(0)}% threshold`
 }
 
 function parseMatchedTerms(value: unknown): EngineTerm[] {
@@ -50,28 +62,56 @@ function parseMatchedTerms(value: unknown): EngineTerm[] {
 
 export function productToEngineResult(
   product: ProductRow,
-  matchedBy: IdentityMatch
+  matchedBy: IdentityMatch,
+  identitySimilarity?: number,
+  /**
+   * This scan's mean OCR confidence. Optional so existing callers/tests that
+   * only exercise the mapping stay valid, but the scan pipeline always passes
+   * it: the stored row describes the PRODUCT, while this number describes how
+   * reliably THIS label was read — and FR-3 says a sub-0.6 read is a penalty.
+   */
+  ocrMeanConfidence?: number
 ): EngineResult {
-  const confidenceTier = normalizeConfidenceTier(product.confidence_tier)
+  const storedConfidence = normalizeConfidenceTier(product.confidence_tier)
+  let confidenceTier: VerdictTier = matchedBy === "name" &&
+    (identitySimilarity ?? 0) < NAME_MATCH_STRONG && storedConfidence === "high"
+    ? "medium"
+    : storedConfidence
   const constraintNotice = CONSTRAINT_NOTICE_BY_CATEGORY[product.category]
-  const confidenceFactor =
-    matchedBy === "barcode"
-      ? "Stored verified verdict — barcode matched the verified product dataset"
-      : matchedBy === "name"
-        ? "Stored verified verdict — name matched the verified product dataset"
-        : "Stored verified verdict from the product dataset"
+  const confidenceFactor = matchedBy === "barcode"
+    ? "Stored catalogue verdict — barcode matched the verified product dataset"
+    : matchedBy === "name"
+      ? identitySimilarity != null && identitySimilarity >= NAME_MATCH_STRONG
+        ? `Stored catalogue verdict — strong product-name match (${identitySimilarity.toFixed(2)})`
+        : `Stored catalogue verdict — tentative product-name match (${(identitySimilarity ?? 0).toFixed(2)}); confidence capped at Medium`
+      : "Stored verdict from the product dataset"
+
+  // FR-3 OCR penalty, applied to the stored-verdict path too. Without it a
+  // catalogue hit scanned from an unreadable photo reported the row's curated
+  // confidence with no acknowledgement that the label itself was barely read.
+  const factors = [confidenceFactor]
+  if (typeof ocrMeanConfidence === "number" && ocrMeanConfidence < OCR_CONFIDENCE_PENALTY_THRESHOLD) {
+    confidenceTier = downgradeTier(confidenceTier)
+    factors.push(ocrPenaltyFactor(ocrMeanConfidence))
+  }
 
   return {
     category: product.category,
     subcategory: product.subcategory,
     result: {
-      tier: product.result_tier === "none" ? "low" : product.result_tier,
+      // `none` is a first-class result tier (EngineResult.result.tier), NOT a
+      // synonym for "low". For oral care it means Fluoride-Free / No Data; for
+      // food it means no GMO crops found. Collapsing it to "low" made the same
+      // product report a different tier depending on whether it happened to be
+      // in the catalogue, and rendered a filled gauge beside a "Fluoride-Free"
+      // label. Pass it through unchanged.
+      tier: product.result_tier,
       label: product.result_label,
     },
     confidence: {
       tier: confidenceTier,
       score: tierScore(confidenceTier),
-      factors: [confidenceFactor],
+      factors,
     },
     matchedTerms: parseMatchedTerms(product.matched_terms),
     guidance: product.guidance_text || constraintNotice,

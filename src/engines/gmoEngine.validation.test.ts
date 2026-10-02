@@ -94,7 +94,7 @@ for (let i = 0; i < rows.length; i++) {
   const row = rows[i]
   if (!row.ingredientsText || row.expectedTokens.length === 0) continue
 
-  const engineResult = gmoEngine(row.ingredientsText, CTX)
+  const engineResult = gmoEngine(row.ingredientsText, CTX, gmoConfig)
   const engineFamilies = new Set(
     engineResult.matchedTerms
       .filter((t: EngineTerm) => t.kind === "explicit")
@@ -188,19 +188,69 @@ describe("gmoEngine — hand-labeled validation set", () => {
       "hydrogenated vegetable fats, water",
       "edible vegetables oil, salt",
     ]) {
-      const r = gmoEngine(text, CTX)
+      const r = gmoEngine(text, CTX, gmoConfig)
       expect(r.matchedTerms.some((t) => t.kind === "ambiguous")).toBe(true)
       expect(r.result.tier).toBe("low")
     }
     // An explicit crop alias that contains "vegetable" still wins.
-    const soy = gmoEngine("textured vegetable protein, salt", CTX)
+    const soy = gmoEngine("textured vegetable protein, salt", CTX, gmoConfig)
     expect(soy.matchedTerms.some((t) => t.kind === "explicit" && t.normalized === "soy")).toBe(true)
   })
 
-  it("matches the new salmon crop family and food-acid ambiguous term", () => {
-    const salmon = gmoEngine("smoked salmon, salt", CTX)
-    expect(salmon.matchedTerms.some((t) => t.kind === "explicit" && t.normalized === "salmon")).toBe(true)
-    const acid = gmoEngine("food acid, sugar", CTX)
+  it("never treats fish as a genetically modified crop", () => {
+    // Salmon was in the v1.0 lookup table as an explicit crop family. It is an
+    // animal product, not a genetically modified crop — the archived spec
+    // (docs/archive/GMO_Lookup_And_Confidence_Spec_v0.2.json) explicitly
+    // recorded "salmon excluded as not relevant", and the entry was reintroduced
+    // by mistake. Left in, a can of smoked salmon scored "High GMO Likelihood".
+    for (const text of ["smoked salmon, salt", "pink salmon (oncorhynchus gorbuscha)", "salmon: 59.9%, salt: 18.4%"]) {
+      const r = gmoEngine(text, CTX, gmoConfig)
+      expect(
+        r.matchedTerms.some((t) => t.kind === "explicit"),
+        `"${text}" must not produce an explicit GMO crop match`
+      ).toBe(false)
+      expect(r.result.tier).toBe("low")
+    }
+    // The family must not exist in the table at all.
+    const families = gmoConfig.explicit_crop_matches.entries.map((e) => e.crop_family)
+    expect(families).not.toContain("salmon")
+  })
+
+  it("keeps exactly one entry per crop family — no double counting", () => {
+    // GMO_Build_Guide.md §3.2 lists ONE cotton family covering cotton,
+    // cottonseed and cottonseed oil. v1.0 had BOTH a "cottonseed" entry and a
+    // "cotton" entry with overlapping aliases, so one ingredient could inflate
+    // N by counting as two crops and push a Medium verdict to High.
+    const entries = gmoConfig.explicit_crop_matches.entries
+    const seen = new Set<string>()
+    for (const e of entries) {
+      expect(seen.has(e.crop_family), `duplicate crop_family "${e.crop_family}"`).toBe(false)
+      seen.add(e.crop_family)
+    }
+    // And an alias must not appear under two different families.
+    const owner = new Map<string, string>()
+    for (const e of entries) {
+      for (const alias of e.aliases) {
+        const key = alias.toLowerCase()
+        const prior = owner.get(key)
+        expect(prior, `alias "${alias}" is claimed by both ${prior} and ${e.crop_family}`).toBeUndefined()
+        owner.set(key, e.crop_family)
+      }
+    }
+  })
+
+  it("counts every crop family a single token declares, not just the first", () => {
+    // Real labels write "SOYBEAN AND/OR CANOLA OIL". Returning on the first
+    // alias match saw only soy and understated N. (Honey Maid Grahams in the
+    // validation set regressed from High to Medium because of this.)
+    const both = gmoEngine("SOYBEAN AND/OR CANOLA OIL, SUGAR", CTX, gmoConfig)
+    const families = both.matchedTerms.filter((t) => t.kind === "explicit").map((t) => t.normalized)
+    expect(new Set(families)).toEqual(new Set(["soy", "canola"]))
+    expect(both.result.tier).toBe("high")
+  })
+
+  it("treats food acid as ambiguous", () => {
+    const acid = gmoEngine("food acid, sugar", CTX, gmoConfig)
     expect(acid.matchedTerms.some((t) => t.kind === "ambiguous")).toBe(true)
   })
 })

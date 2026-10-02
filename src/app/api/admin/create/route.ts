@@ -1,6 +1,7 @@
 import "server-only"
 
 import { requireSuperAdmin, isAdminSession } from "@/lib/admin/api"
+import { correlationId, serverError } from "@/lib/api/http"
 import { getSupabaseAdmin } from "@/lib/supabase/server"
 import { createAdminPayloadSchema } from "@/lib/validation/schemas"
 
@@ -9,6 +10,8 @@ import { createAdminPayloadSchema } from "@/lib/validation/schemas"
 // the reviewer role stays invite-only. Uses the service-role client (server
 // only) to create the auth user, then elevates their auto-created profile.
 export async function POST(request: Request) {
+  const correlation = correlationId()
+
   const guard = await requireSuperAdmin()
   if (!isAdminSession(guard)) return guard.response
 
@@ -38,7 +41,17 @@ export async function POST(request: Request) {
     email_confirm: true,
   })
   if (error) {
-    return Response.json({ error: "create_failed", message: error.message }, { status: 400 })
+    // A duplicate email is a legitimate user-facing case, so surface that one
+    // specifically; everything else stays generic (SEC-14).
+    const isDuplicate = /already|registered|exists/i.test(error.message)
+    return serverError(
+      "admin.create_user",
+      error,
+      isDuplicate ? 409 : 400,
+      isDuplicate ? "email_already_registered" : "create_failed",
+      isDuplicate ? "An account already exists for that email address." : "The admin account could not be created.",
+      correlation
+    )
   }
   const userId = data.user.id
 
@@ -52,14 +65,17 @@ export async function POST(request: Request) {
 
   if (profileError) {
     await admin.auth.admin.deleteUser(userId).catch(() => {})
-    return Response.json(
-      { error: "profile_failed", message: "Account created but role could not be assigned." },
-      { status: 500 }
+    return serverError(
+      "admin.upsert_profile",
+      profileError,
+      500,
+      "profile_failed",
+      "Account created but role could not be assigned.",
+      correlation
     )
   }
 
-  return Response.json(
-    { ok: true, email },
-    { status: 201, headers: { "X-RateLimit-Remaining": "0" } }
-  )
+  // No X-RateLimit-Remaining header: this endpoint has no limiter, so claiming
+  // a remaining quota of "0" was misleading. Access is superadmin-gated.
+  return Response.json({ ok: true, email, correlation }, { status: 201 })
 }

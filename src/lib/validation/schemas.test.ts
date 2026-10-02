@@ -41,6 +41,18 @@ describe("submissionPayloadSchema", () => {
     }
   })
 
+  it("accepts verification status and a front-label evidence photo", () => {
+    const parsed = submissionPayloadSchema.safeParse(validPayload({
+      frontPhotoPath: "pending/123e4567-e89b-12d3-a456-426614174000.jpg",
+      gmoStatus: "non_gmo_certified",
+    }))
+    expect(parsed.success).toBe(true)
+  })
+
+  it("rejects unsupported GMO status values", () => {
+    expect(submissionPayloadSchema.safeParse(validPayload({ gmoStatus: "verified" })).success).toBe(false)
+  })
+
   it("accepts a barcode of 8–14 digits", () => {
     expect(submissionPayloadSchema.safeParse(validPayload({ barcode: "5449000000996" })).success).toBe(true)
   })

@@ -41,7 +41,15 @@ export interface TerminateRequest {
   type: "terminate";
 }
 
-export type OcrWorkerRequest = RecognizeRequest | TerminateRequest;
+// Stop waiting on an in-flight recognition. Sent by the main-thread timeout
+// guard so a hung Tesseract core is actually cancelled rather than just having
+// its result discarded (06_AGENT_CONTEXT.md §7).
+export interface AbortRequest {
+  id: string;
+  type: "abort";
+}
+
+export type OcrWorkerRequest = RecognizeRequest | TerminateRequest | AbortRequest;
 
 export type OcrWorkerResponse =
   | { id: string; type: "progress"; progress: OcrProgress }

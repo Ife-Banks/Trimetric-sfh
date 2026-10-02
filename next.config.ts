@@ -5,6 +5,11 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(self), geolocation=(), microphone=()" },
+  // SEC-12: HTTPS enforced everywhere; HSTS set. Was missing entirely — the
+  // spec lists it but it had never been added. `preload` is deliberately NOT
+  // set: submitting a domain to the HSTS preload list is effectively
+  // irreversible and is an operational decision, not a code one.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
   // Tesseract needs 'wasm-unsafe-eval' (compiles WASM) but this does NOT
   // permit JS eval(). worker-src 'blob:' allows the OCR worker + tesseract's
   // blob-backed nested worker. All OCR assets are self-hosted under

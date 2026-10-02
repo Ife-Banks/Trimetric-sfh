@@ -15,6 +15,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Agent-tool worktrees: whole duplicate copies of this repo sitting on disk.
+    // Git ignores them via .kilo/.gitignore; ESLint does not read that, so it
+    // was linting a second copy of the codebase and emitting phantom warnings.
+    "**/.kilo/**",
+    "**/.claude/**",
     // Vendored binaries copied by `npm run ocr:assets`: minified tesseract
     // worker + WASM core. Not source; linting them is noise.
     "**/public/vendor/**",

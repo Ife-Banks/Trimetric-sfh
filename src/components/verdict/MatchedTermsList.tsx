@@ -4,7 +4,7 @@
 // class gets its own marker colour plus a count, and the empty case uses the
 // app-wide EmptyState language (no terms found ≠ an absent engine).
 
-import type { EngineTerm } from "@/engines/types"
+import type { EngineResult, EngineTerm } from "@/engines/types"
 import { Badge } from "@/components/ui/badge"
 import { EmptyState } from "@/components/ui/empty-state"
 import { SearchX } from "lucide-react"
@@ -13,7 +13,7 @@ import { cn } from "cn"
 const GROUP_ORDER: EngineTerm["kind"][] = ["certification", "explicit", "ambiguous", "active_compound"]
 
 const GROUP_LABEL: Record<EngineTerm["kind"], string> = {
-  certification: "Certification detected",
+  certification: "Certification wording detected",
   explicit: "Crop-derived ingredients",
   ambiguous: "Ambiguous derivatives",
   active_compound: "Active compound",
@@ -36,16 +36,31 @@ function groupTerms(terms: EngineTerm[]): Map<EngineTerm["kind"], EngineTerm[]> 
   return groups
 }
 
-export function MatchedTermsList({ terms }: { terms: EngineTerm[] }) {
+export function MatchedTermsList({
+  terms,
+  category = "gmo_food",
+}: {
+  terms: EngineTerm[]
+  category?: EngineResult["category"]
+}) {
   const groups = groupTerms(terms)
   const present = GROUP_ORDER.filter((kind) => (groups.get(kind)?.length ?? 0) > 0)
 
   if (present.length === 0) {
+    // This component is rendered for BOTH categories in admin review
+    // (RecomputePreview), so the empty state must not hardcode GMO wording —
+    // an oral-care submission with no matches was reporting "No GMO-relevant
+    // terms recognised".
+    const gmo = category === "gmo_food"
     return (
       <EmptyState
         icon={<SearchX className="size-5" aria-hidden="true" />}
-        title="No GMO-relevant terms recognised"
-        description="Nothing in the ingredient list matched the lookup table. This can happen when the label text is damaged or the list is short."
+        title={gmo ? "No GMO-relevant terms recognised" : "No fluoride terms recognised"}
+        description={
+          gmo
+            ? "Nothing in the ingredient list matched the lookup table. This can happen when the label text is damaged or the list is short."
+            : "No active fluoride compound or fluoride-free claim was recognised. This can happen when the label text is damaged or the ingredient panel was not captured."
+        }
         className="border-0 px-4 py-6"
       />
     )

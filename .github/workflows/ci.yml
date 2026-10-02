@@ -1,0 +1,111 @@
+name: CI
+
+# AGENTS.md requires the service-role key to be absent from production build
+# output, with the build failing on a match. That check did not exist because
+# there was no CI at all. This workflow makes the documented gates real.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Never let a workflow run on a fork with secrets available.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Next emits global LayoutProps/PageProps into .next. Without this,
+      # typecheck fails with "Cannot find name 'LayoutProps'" (AGENTS.md).
+      - name: Next typegen
+        run: npx next typegen
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      # 08_DESIGN_SYSTEM.md §6: no raw hex in component code. A literal hex in a
+      # className cannot be overridden by a `dark:` utility, so an unmapped colour
+      # silently opts a whole screen out of dark mode. The only exemptions are the
+      # third-party brand marks and the build-time themeColor meta.
+      - name: Palette check (no unmapped literal colours)
+        run: npm run palette:check
+
+      # supabase/publish-gmo-v1.1.sql must stay byte-faithful to
+      # data/gmo_lookup_config_v1.0.json; the client rejects a row whose
+      # config_json.version and version column disagree.
+      - name: Lookup config consistency
+        run: node scripts/verify-publish-sql.mjs
+
+      - name: Audit dependencies (high severity)
+        run: npm audit --audit-level=high
+
+      - name: Build
+        # Placeholder values: the build must not need real credentials, and the
+        # point of the next step is to prove the real key never reaches output.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+        run: npm run build
+
+      # SEC-10 / AGENTS.md: the service-role key must never appear in build
+      # output. A placeholder stands in for the real key here, so this also
+      # catches any code that inlines a server-only value into the client
+      # bundle via NEXT_PUBLIC_* or a client component import.
+      - name: Verify the service-role key is absent from build output
+        env:
+          SERVICE_ROLE_KEY: placeholder-service-role-key
+        run: |
+          set -euo pipefail
+          echo "Scanning build output for the service-role key value..."
+          # Exclude the test fixtures/scripts that legitimately mention the name.
+          if grep -rIl --exclude-dir=node_modules -- "$SERVICE_ROLE_KEY" .next/ 2>/dev/null; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY value found in build output"
+            exit 1
+          fi
+          echo "OK: no service-role key value in .next/"
+
+      - name: Verify no NEXT_PUBLIC_-prefixed service key
+        run: |
+          set -euo pipefail
+          if grep -rIn "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE" --exclude-dir=node_modules . src/ 2>/dev/null; then
+            echo "::error::NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY must not exist"
+            exit 1
+          fi
+          echo "OK: no NEXT_PUBLIC_-prefixed service role key"
+
+      - name: Verify no eval / new Function / dangerouslySetInnerHTML
+        run: |
+          set -euo pipefail
+          failed=0
+          if grep -rInE '\beval\(|new Function\(' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' src/; then
+            echo "::error::eval()/new Function() found — configs must be data, never code"
+            failed=1
+          fi
+          if grep -rIn 'dangerouslySetInnerHTML' --include='*.ts' --include='*.tsx' src/; then
+            echo "::error::dangerouslySetInnerHTML found"
+            failed=1
+          fi
+          exit $failed

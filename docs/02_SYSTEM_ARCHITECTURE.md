@@ -39,14 +39,14 @@ If you find yourself writing a second verdict screen or a second submissions tab
 │  lookup_config (cached)                         │           │
 └───────────┼─────────────────────────────────────┼───────────┘
             │                                     │
-            ▼ (barcode lookup)                    ▼ (write)
+            ▼ (name lookup)                     ▼ (write)
 ┌─────────────────────────────────────────────────────────────┐
 │  SUPABASE                                                    │
 │                                                              │
 │  Postgres: products │ submissions │ lookup_config │ profiles │
-│  Auth: anon users, admin role                                │
-│  Storage: submission-images bucket                           │
-│  RLS: enforced on every table                                │
+│  Auth: anon users, three-role (user/admin/superadmin)         │
+│  Storage: submission-images bucket (private, signed URLs)    │
+│  RLS: on every table; anon INSERT into submissions constrained │
 └─────────────────────────────────────────────────────────────┘
             ▲
             │
@@ -75,30 +75,17 @@ The one thing the client must *not* do: decide what enters the verified dataset.
 
 ## 4. Request flows
 
-The scan always captures a photo and always runs OCR on it — barcode and name matching are shortcuts to a *trusted stored answer*, tried before falling back to the rules engine, not alternatives to photographing the product.
+The scan captures the package front and ingredients panel and always OCRs both. Product identification uses the OCR'd name within the selected category; the ingredients OCR always feeds the GMO or fluoride rules engine when no catalogue record matches. Barcode scanning is not part of the active scan flow.
 
-### 4.1a Fastest path — known product (barcode)
-
-```
-User scans → barcode decoded → GET products WHERE barcode = ?
-  → row found → render stored verdict (confidence: high)
-```
-No further OCR needed once the barcode resolves. Target < 2s.
-
-### 4.1b Fast path — known product (name match, no usable barcode)
-
-Most informally packaged and local-market products won't have a scannable barcode at all. This path is not a fallback edge case — expect it to be the common path for a significant share of real scans.
+### 4.1 Known product (name match)
 
 ```
-Capture front+back → OCR front → normalize product name
-  → fuzzy match against products.name (trigram similarity)
-  → similarity ≥ threshold → render stored verdict
-      (confidence: high if strong match, medium if borderline)
-  → below threshold → fall through to 4.2
+Capture front+back → OCR both → fuzzy match front name in selected category
+  → similarity ≥ 0.8 → render stored verdict; preserve stored confidence
+  → similarity 0.4–0.79 → render stored verdict, cap confidence at Medium
+  → no matching product → run category rules engine on ingredients OCR
 ```
-Skips the rules engine but NOT the OCR step — the ingredients text is still extracted in parallel, so if the name match turns out too weak, nothing is re-captured.
-
-### 4.2 Full path — no identity match
+### 4.2 Full path — no name match
 
 ```
 Capture front+back → OCR both → normalize
@@ -173,7 +160,57 @@ order by score desc
 limit 1;
 ```
 
-Suggested threshold: `score >= 0.6` → treat as a match (confidence: high if `>= 0.8`, medium otherwise); below 0.6 → no match, fall through to the full rules-engine path (4.2). Tune this threshold against real OCR output early — it's a one-line constant, but getting it wrong either floods the review queue with things that should have matched, or silently returns wrong products for things that shouldn't have.
+Thresholds — single-source constants in `src/engines/constants.ts`
+(`NAME_MATCH_THRESHOLD = 0.4`, `NAME_MATCH_STRONG = 0.8`), passed to the RPC
+rather than hardcoded at call sites:
+
+| Score | Behaviour |
+|---|---|
+| `>= 0.8` | Match. Stored verdict used, confidence tier preserved. |
+| `0.4`–`0.79` | Match. Stored verdict used, confidence capped at Medium. |
+| `< 0.4` | No match. Fall through to the full rules-engine path (§4.2). |
+
+The RPC is category-scoped (`search_products_by_name(p_name, p_category, p_threshold)`) so an oral-care product can never fuzzy-match a `gmo_food` row.
+
+#### A similarity score alone cannot tell "same product" from "same category"
+
+`word_similarity` matches on **any shared word**, so a score in the accept band
+does not mean the row is the same product. Measured against the live catalogue:
+
+| OCR'd front-panel line | Best RPC row | Score | Same product? |
+|---|---|---|---|
+| `Toothpaste 50ml` | GUM Dental Paste Toothpaste | 0.688 | **no** — generic word + a number |
+| `Whitening Anticavity Paste` | ACT Restoring Anticavity Fluoride **Mouthwash** | 0.481 | **no** — different product type |
+
+Both sit inside the `0.4`–`0.79` accept band, and both returned the **wrong
+product's stored fluoride verdict** to a scan of a brand that does not exist —
+behind the green "Catalogue match by product name" framing.
+
+So `identifyProduct` applies a second, stricter test before accepting a row: the
+candidate and the product name must share at least one **distinctive** token —
+lowercase alphanumeric, ≥3 chars, containing letters, and not in
+`GENERIC_PRODUCT_WORDS` (`toothpaste`, `paste`, `mouthwash`, `rinse`, `gel`,
+`cream`, `fluoride`, `whitening`, `sensitive`, `anticavity`, `care`, `daily`,
+`plus`, … plus the food equivalents). `"Toothpaste 50ml"` shares nothing
+distinctive and is rejected; `"COLGATE"` shares `colgate` and is kept.
+
+**Accepted tradeoff:** a brand mangled enough by OCR to share no token at all
+(`SENSODVNE` for `Sensodyne`) now falls through to the cold-start engine instead
+of borrowing a stored verdict. That is the right direction to fail — an honest
+engine screening beats a confident answer about a different product — but it does
+mean a marginal name match is more likely to land on the provisional screen.
+
+### Presenting a tentative match
+
+A match below `NAME_MATCH_STRONG` is rendered as *"Tentative name match (0.69) —
+confirm this is the same product"* in `--warning`, **without** the green
+`BadgeCheck` icon. Only a strong name match (or a barcode hit, exact by
+construction) gets the verified treatment. The stored product's name is always
+shown next to the scanned photo so the two can be compared directly.
+
+Tune these against real OCR output early — they are one-line constants, but
+getting them wrong either floods the review queue with things that should have
+matched, or silently returns wrong products for things that shouldn't have.
 
 ---
 
@@ -191,6 +228,6 @@ Seed data for local/staging comes from a checked-in `seed.sql` containing the cu
 
 ## 8. Scaling notes (post-MVP, not build targets)
 
-- `products` lookups are single-row barcode reads — a B-tree index on `barcode` carries this a long way.
+- `products` lookups use category-scoped trigram name matching.
 - If OCR accuracy forces a server-side Vision fallback, put it behind a Next.js Route Handler with its own rate limit, not a direct client-to-vendor call (which would expose the API key).
 - Submission volume is the growth axis that matters. If review becomes a bottleneck, the fix is reviewer tooling (bulk approve for identical products), not architecture change.

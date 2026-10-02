@@ -6,8 +6,21 @@ export interface EngineContext {
   ocrMeanConfidence: number // 0–1, from Tesseract worker
   isTruncated: boolean // OCR flagged the text as cut off
   identityMatch: "barcode" | "name" | "none" // which FR-2 tier resolved
+  identitySimilarity?: number // fuzzy product-name match score (0–1)
   category: "gmo_food" | "oral_care" // from FR-4 category routing
   subcategory: string // from FR-4 category routing
+  /**
+   * OCR'd FRONT-label text, when available.
+   *
+   * FR-1 assigns the front panel "product name, brand, category cues, and
+   * certification marks", so certifications are routinely printed there rather
+   * than in the ingredient list. The GMO engine searches this alongside the
+   * ingredients text for the certification short-circuit
+   * (GMO_Build_Guide.md §3.1: "if any of these appear in the OCR'd text").
+   * Optional: callers that only have the ingredient panel (the admin recompute,
+   * where the reviewer sets the certification explicitly) may omit it.
+   */
+  packageFrontText?: string
 }
 
 export interface EngineTerm {

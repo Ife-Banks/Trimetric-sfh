@@ -107,8 +107,12 @@ export function RegisterForm() {
 
   if (confirmSent) {
     return (
-      <AuthScreen>
-        <AuthBrandMark tagline={TAGLINE} />
+      <AuthScreen
+        className="mx-auto min-h-[960px] w-full max-w-[402px] text-ink-strong"
+        contentClassName="px-5 pt-[76px] pb-8 md:px-5"
+        style={{ background: "linear-gradient(180deg, var(--mint) 0%, var(--brand-wash) 100%)", colorScheme: "light" }}
+      >
+        <AuthBrandMark tagline={TAGLINE} titleClassName="text-emerald-mid" taglineClassName="text-[12px] text-ink-strong" />
         <div className="mt-8 rounded-lg border border-border bg-surface p-4 text-center">
           <MailCheck className="mx-auto size-8 text-success" aria-hidden="true" />
           <p className="mt-3 text-body-strong">Confirm your email</p>
@@ -125,11 +129,15 @@ export function RegisterForm() {
   }
 
   return (
-    <AuthScreen>
-      <AuthBrandMark tagline={TAGLINE} />
+    <AuthScreen
+      className="mx-auto min-h-[960px] w-full max-w-[402px] text-ink-strong"
+      contentClassName="px-5 pt-[76px] pb-8 md:px-5"
+      style={{ background: "linear-gradient(180deg, var(--mint) 0%, var(--brand-wash) 100%)", colorScheme: "light" }}
+    >
+      <AuthBrandMark tagline={TAGLINE} titleClassName="text-emerald-mid" taglineClassName="text-[12px] text-ink-strong" />
 
-      <form onSubmit={(e) => void register(e)} className="mt-8 space-y-4">
-        <Field label="User Name" htmlFor="register-name">
+      <form onSubmit={(e) => void register(e)} className="mt-12 space-y-[10px]">
+        <Field label="User Name" htmlFor="register-name" className="space-y-1.5">
           <Input
             id="register-name"
             type="text"
@@ -137,10 +145,11 @@ export function RegisterForm() {
             required
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+            className="!h-[52px] rounded-[12px] border-emerald-mid !bg-surface/20 px-3 text-[14px] !text-ink-strong focus-visible:border-emerald-mid focus-visible:ring-emerald-mid/20"
           />
         </Field>
 
-        <Field label="E-mail" htmlFor="register-email">
+        <Field label="E-mail" htmlFor="register-email" className="space-y-1.5">
           <Input
             id="register-email"
             type="email"
@@ -148,10 +157,11 @@ export function RegisterForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="!h-[52px] rounded-[12px] border-emerald-mid !bg-surface/20 px-3 text-[14px] !text-ink-strong focus-visible:border-emerald-mid focus-visible:ring-emerald-mid/20"
           />
         </Field>
 
-        <Field label="Password" htmlFor="register-password" helper={`At least ${MIN_PASSWORD_LENGTH} characters.`}>
+        <Field label="Password" htmlFor="register-password" className="space-y-1.5">
           <Input
             id="register-password"
             type="password"
@@ -160,10 +170,11 @@ export function RegisterForm() {
             minLength={MIN_PASSWORD_LENGTH}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="!h-[52px] rounded-[12px] border-emerald-mid !bg-surface/20 px-3 text-[14px] !text-ink-strong focus-visible:border-emerald-mid focus-visible:ring-emerald-mid/20"
           />
         </Field>
 
-        <Field label="Confirm Password" htmlFor="register-confirm-password">
+        <Field label="Confirm Password" htmlFor="register-confirm-password" className="space-y-1.5">
           <Input
             id="register-confirm-password"
             type="password"
@@ -171,12 +182,13 @@ export function RegisterForm() {
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
+            className="!h-[52px] rounded-[12px] border-emerald-mid !bg-surface/20 px-3 text-[14px] !text-ink-strong focus-visible:border-emerald-mid focus-visible:ring-emerald-mid/20"
           />
         </Field>
 
         {formError && <InlineAlert variant="destructive">{formError}</InlineAlert>}
 
-        <Button type="submit" size="lg" className="w-full rounded-md" disabled={busy !== null}>
+        <Button type="submit" size="lg" className="!h-[52px] w-full rounded-[12px] bg-brand-ink text-[14px] font-semibold uppercase !text-ink-on-brand hover:bg-brand-ink/90" disabled={busy !== null}>
           {busy === "email" ? (
             <>
               <Spinner /> Creating your account…
@@ -187,19 +199,27 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <p className="mt-3 text-center text-body">
-        <span className="text-foreground">Already have an Account ?</span>{" "}
+      <p className="mt-3 text-center text-[14px] leading-5 text-ink-strong">
+        <span>Already have an Account ?</span>{" "}
         <Link
           href="/login"
-          className="font-semibold text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="ml-1 font-semibold text-emerald-mid underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Login
         </Link>
       </p>
 
-      <AuthOrDivider />
-      <AuthGuestButton busy={busy} onPress={() => router.push(HUB_PATH)} />
-      <AuthProviderButtons busy={busy} onSelect={(provider) => void continueWithOAuth(provider)} />
+      <AuthOrDivider className="mt-2" lineClassName="bg-emerald-mid" />
+      <AuthGuestButton
+        busy={busy}
+        onPress={() => router.push(HUB_PATH)}
+        className="mt-1 !min-h-11 text-[12px] font-semibold text-emerald-mid no-underline"
+      />
+      <AuthProviderButtons
+        busy={busy}
+        onSelect={(provider) => void continueWithOAuth(provider)}
+        className="mt-2 gap-8 [&_button]:border-0 [&_button]:bg-surface [&_button]:text-ink-strong [&_button]:shadow-sm [&_button:hover]:bg-surface"
+      />
     </AuthScreen>
   )
 }

@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { MobileOnlyGate } from "@/components/layout/MobileOnlyGate";
 import { Toaster } from "@/components/layout/Toaster";
 import { ServiceWorkerRegister } from "@/components/layout/ServiceWorkerRegister";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Inter is the GMO CHECK face (Figma `bobby`) and now backs --font-sans, so
+// every screen inherits it. Geist survives as the mono face only.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -16,14 +19,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SHF — Scan, read, decide",
+  // MUTAGENIC is the umbrella brand; "GMO Check" and "Fluoride Scan" are its
+  // two flows, so the app name is the umbrella and the flows are named on their
+  // own screens.
+  title: "MUTAGENIC — Scan, read, decide",
   description:
     "Point your camera at a product label to get a plain-language GMO or fluoride verdict, with a separate confidence rating.",
-  applicationName: "SHF",
+  applicationName: "Mutagenic",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "SHF",
+    title: "Mutagenic",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -40,9 +46,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Literal hexes are CORRECT here and must not be tokenised. Next.js resolves
+  // themeColor at build time into a <meta name="theme-color"> tag; there is no
+  // runtime stylesheet for a CSS variable to reach. These must stay in sync with
+  // --background in globals.css by hand — that is why they are the only two raw
+  // values allowed outside the palette.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5fbfa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1614" },
+    { media: "(prefers-color-scheme: light)", color: "#faf8ff" }, // == --background
+    { media: "(prefers-color-scheme: dark)", color: "#0b1614" }, // == --background (dark)
   ],
 };
 
@@ -50,7 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <a
@@ -59,8 +70,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
-        <BottomNav />
-        {children}
+        {/* The app shell is a single wrapper so the mobile-only rule can hide
+            all of it — pages, header and tab bar — with one declaration
+            (globals.css, `[data-app-shell]`). It carries the flex-column
+            behaviour the pages previously got by being direct children of
+            <body>. */}
+        <div data-app-shell className="flex min-h-full flex-1 flex-col">
+          {children}
+          {/* Rendered AFTER the page, not before it. BottomNav is position:fixed,
+              but it also emits a same-height spacer in normal flow to reserve
+              room at the end of the document. Placed before the content that
+              spacer reserved nothing, so the last row of every page that shows
+              the tab bar sat underneath it. */}
+          <BottomNav />
+        </div>
+        <MobileOnlyGate />
         <Toaster />
         <ServiceWorkerRegister />
       </body>

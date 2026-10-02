@@ -4,7 +4,13 @@
 // the real rules engine against the (possibly corrected) ingredients text.
 
 import { gmoEngine } from "../../engines/gmoEngine"
+import { fluorideEngine } from "../../engines/fluorideEngine"
 import type { EngineContext, EngineResult } from "../../engines/types"
+import type {
+  FluorideLookupConfig,
+  GmoLookupConfig,
+  LookupConfig,
+} from "@/lib/config/lookupConfig"
 
 export interface SubmissionForReview {
   id: string
@@ -17,6 +23,8 @@ export interface SubmissionForReview {
   certification_text: string | null
   concentration_text: string | null
   photo_path: string | null
+  front_photo_path?: string | null
+  gmo_status?: "non_gmo_certified" | "contains_gmo" | "not_sure" | null
   ocr_confidence: number | null
   engine_preview: unknown
   created_at: string
@@ -32,33 +40,61 @@ export function rebuildEngineContext(submission: SubmissionForReview): EngineCon
     isTruncated: false,
     identityMatch: "none",
     category: submission.category,
+    // GMO names its catch-all bucket; oral care leaves it "" so the fluoride
+    // engine resolves the subcategory from keywords or applies its tooth/gel
+    // fallback (capped at Medium — never a guessed High).
     subcategory:
-      submission.subcategory || (submission.category === "gmo_food" ? "packaged_food" : "oral_care_product"),
+      submission.subcategory || (submission.category === "gmo_food" ? "packaged_food" : ""),
   }
 }
 
 // A certification the admin marks is evidence for the engine's certification
 // short-circuit, so it must be part of the text the engine scans — and, because
 // `products` has no certification column, it is folded into the stored
-// ingredients_text on approval.
+// ingredients_text on approval. For oral care the printed concentration/PPM is
+// the equivalent correction and must reach the fluoride engine's ppm parser.
 export function composeScoringText(
   ingredientsText: string,
-  certificationText?: string | null
+  certificationText?: string | null,
+  concentrationText?: string | null
 ): string {
   const ingredients = ingredientsText.trim()
   const cert = (certificationText ?? "").trim()
-  if (!cert || cert.toLowerCase() === "none visible") return ingredients
-  return ingredients ? `${ingredients}, ${cert}` : cert
+  const concentration = (concentrationText ?? "").trim()
+  let text = ingredients
+  if (cert && cert.toLowerCase() !== "none visible") {
+    text = text ? `${text}, ${cert}` : cert
+  }
+  if (concentration) {
+    text = text ? `${text}, ${concentration}` : concentration
+  }
+  return text
 }
 
-// Category dispatch. gmo_food is wired; oral_care lands in Phase 6. Returning
-// null (rather than guessing with the wrong engine) keeps the queue honest for
-// any oral-care rows that slip in.
+// Category dispatch — both engines run here, chosen by the submitted category.
+// Exactly one runs; the admin approves the computed verdict, never hand-typed
+// values.
 export function recomputeVerdict(
   ingredientsText: string,
   certificationText: string | null | undefined,
-  submission: SubmissionForReview
+  submission: SubmissionForReview,
+  lookupConfig: LookupConfig,
+  concentrationText?: string | null
 ): EngineResult | null {
-  if (submission.category !== "gmo_food") return null
-  return gmoEngine(composeScoringText(ingredientsText, certificationText), rebuildEngineContext(submission))
+  const context = rebuildEngineContext(submission)
+  // Allow an in-flight admin edit to override what was submitted — the preview
+  // recomputes from THOSE corrected values, not stale ones.
+  const concentration = concentrationText ?? submission.concentration_text
+  if (submission.category === "oral_care") {
+    return fluorideEngine(
+      composeScoringText(ingredientsText, certificationText, concentration),
+      context,
+      lookupConfig as FluorideLookupConfig
+    )
+  }
+  return gmoEngine(
+    composeScoringText(ingredientsText, certificationText),
+    context,
+    lookupConfig as GmoLookupConfig
+  )
 }

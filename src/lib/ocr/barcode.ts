@@ -17,7 +17,6 @@ hints.set(DecodeHintType.POSSIBLE_FORMATS, [
   BarcodeFormat.CODE_128,
   BarcodeFormat.ITF,
 ]);
-hints.set(DecodeHintType.TRY_HARDER, true);
 
 const reader = new BrowserMultiFormatReader(hints);
 
@@ -25,8 +24,10 @@ const reader = new BrowserMultiFormatReader(hints);
  * Decode a single barcode from an image. Returns the raw digits/text or null.
  */
 export async function decodeBarcode(image: Blob): Promise<string | null> {
-  if (typeof Image === "undefined") return null; // SSR guard
+  if (typeof Image === "undefined" || typeof document === "undefined") return null;
   try {
+    const canvas = document.createElement("canvas");
+    if (!canvas.getContext("2d")) return null;
     const img = await readBlobAsImage(image);
     const result = await reader.decodeFromImageElement(img);
     const text = result?.getText()?.trim();

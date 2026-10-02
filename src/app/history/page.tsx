@@ -1,19 +1,21 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getUserServerSupabase } from "@/lib/supabase/server"
+import { SavedScansView } from "@/components/history/SavedScansView"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { CategoryBadge } from "@/components/ui/category-badge"
 import { EmptyState } from "@/components/ui/empty-state"
 import { InlineAlert } from "@/components/ui/inline-alert"
 import { PageContainer, PageHeader } from "@/components/layout/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarClock, CircleCheck, CircleX, ScanLine, Send } from "lucide-react"
+import { CalendarClock, CircleCheck, CircleX, History, ScanLine, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-// Signed-in user's proposed corrections ("Submissions" — there is no separate
-// scan-log table, so the tab is named for what actually exists). RLS
-// (`submissions_read_own`) gates the rows server-side, so a user can never see
-// anyone else's submissions.
+// Two tabs: "Verified" (scans the user chose to keep, client-side localStorage
+// via lib/savedScans) and "Contributions" (corrections proposed after
+// low-confidence scans — the server `submissions` table, RLS-gated to the
+// owner). There is no shared scan-log table, so the two live apart.
+
 export const dynamic = "force-dynamic"
 
 const STATUS_LABELS: Record<string, string> = {
@@ -60,24 +62,35 @@ export default async function HistoryPage() {
   const rows = (data ?? []) as HistoryRow[]
 
   return (
-    <PageContainer size="md">
+    // Capped at the app's 402pt column rather than PageContainer's `md`
+    // measure (672px). Every other screen is 402 wide, and on the tablets this
+    // app still supports (the gate stops at 1024) a 672px History read as a
+    // different app to the 402px hub it was reached from.
+    <PageContainer className="max-w-[402px]">
       <PageHeader
-        title="Submissions"
-        description="The corrections you've proposed after a low-confidence scan."
+        title="History"
+        description="Scans you kept and the corrections you've proposed."
       />
 
-      <Tabs defaultValue="submissions">
-        {/* Underline tab bar — one honest tab: this log is submissions, not scans
-            (there is no scan-log table). 08 §3 "Tabs": active gets the primary
-            underline + foreground text via the shared Tabs primitive. */}
-        <TabsList aria-label="Submissions">
-          <TabsTrigger value="submissions">
+      <Tabs defaultValue="verified">
+        {/* Underline tab bar — "Verified" (local history) | "Contributions"
+            (server submissions, the honest label for what exists). */}
+        <TabsList aria-label="History">
+          <TabsTrigger value="verified">
+            <History className="size-4" aria-hidden="true" />
+            Verified
+          </TabsTrigger>
+          <TabsTrigger value="contributions">
             <Send className="size-4" aria-hidden="true" />
-            Submissions
+            Contributions
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="submissions" className="mt-6">
+        <TabsContent value="verified" className="mt-6">
+          <SavedScansView />
+        </TabsContent>
+
+        <TabsContent value="contributions" className="mt-6">
           {error ? (
             <InlineAlert variant="destructive">
               Could not load your submissions: {error.message}

@@ -1,14 +1,14 @@
 {
-  "name": "SHF — Scan, read, decide",
-  "short_name": "SHF",
+  "name": "MUTAGENIC — Scan, read, decide",
+  "short_name": "Mutagenic",
   "description": "Point your camera at a product label to get a plain-language GMO or fluoride verdict, with a separate confidence rating.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
+  "background_color": "#FAF8FF",
+  "theme_color": "#FAF8FF",
   "categories": ["food", "health", "utilities"],
   "icons": [
     {

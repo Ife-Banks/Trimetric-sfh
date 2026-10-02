@@ -30,8 +30,14 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     redirect("/")
   }
 
+  // `data-desktop-ok` opts this subtree out of the mobile-only gate
+  // (globals.css). Reviewing a submission queue is a desk task; the rest of
+  // the app is not.
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-6 md:px-6">
+    <div
+      data-desktop-ok
+      className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 pt-6 md:px-6"
+    >
       <div className="xl:grid xl:grid-cols-[14rem_minmax(0,1fr)] xl:gap-10">
         {/* Sidebar column: sticky on ≥xl, hidden below (AdminNav renders a
             horizontal bar with the same items for <xl via className). */}

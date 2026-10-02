@@ -1,4 +1,14 @@
-# Design System — Fluoroscan (Trimetric-SFH)
+# Design System — MUTAGENIC
+
+**Brand structure:** MUTAGENIC is the umbrella brand. It has two flows, each
+named on its own screens: **GMO Check** (food, green) and **Fluoride Scan**
+(oral care, blue). Which flow you are in is carried by the category accents
+(`--accent-gmo` / `--accent-fluoride`), never by duplicating the shell — the hub
+at `/guest-dashboard` is where the two meet, and it is where "Continue as
+Guest", sign-in and post-signup all land. Surfaces that run *before* a flow has
+been chosen (onboarding, auth) speak in the umbrella accent
+(`--accent-mutagenic`), because borrowing either category colour there would
+imply that flow had already been picked.
 
 **Visual identity:** clean, trusted consumer-health application. Light theme
 as default and primary; dark mode supported as a secondary option using the
@@ -16,16 +26,70 @@ Base palette, as Tailwind CSS variables (`globals.css` `:root` / `.dark`):
 
 | Token | Light value | Dark value | Use |
 |---|---|---|---|
-| `--background` | `#F5FBFA` | `#0B1614` | App background |
+| `--background` | `#FAF8FF` | `#0B1614` | App background |
 | `--surface` | `#FFFFFF` | `#101E1B` | Card / panel surfaces |
-| `--surface-muted` | `#EEF6F5` | `#16241F` | Secondary surfaces, input fills |
-| `--foreground` | `#0F1B19` | `#EAF3F1` | Primary text |
-| `--muted-foreground` | `#5B6B68` | `#9AB0AC` | Secondary/supporting text |
-| `--border` | `#DCEAE8` | `#20302C` | Default borders |
-| `--primary` | `#1E5AA8` | `#4C8DE0` | Primary CTA (buttons, active nav, links) |
-| `--primary-foreground` | `#FFFFFF` | `#0B1614` | Text/icons on primary |
+| `--surface-muted` | `#F2F3FF` | `#16241F` | Secondary surfaces, input fills |
+| `--foreground` | `#131B2E` | `#EAF3F1` | Primary text |
+| `--muted-foreground` | `#707975` | `#9AB0AC` | Secondary/supporting text |
+| `--border` | `#EAEDFF` | `#20302C` | Default borders |
+| `--primary` | `#00362A` | `#7FE3BB` | Primary CTA (buttons, active nav, links) |
+| `--primary-foreground` | `#FFFFFF` | `#06120E` | Text/icons on primary |
+| `--wordmark` | `#006A65` | `#4FC4B4` | The MUTAGENIC umbrella wordmark only |
+| `--accent-mutagenic` | `#006A65` | `#4FC4B4` | Umbrella accent — entry surfaces (onboarding, auth) before a flow is chosen |
+| `--accent-gmo` | `#006C4A` | `#3DBA86` | GMO Check / food flow |
+| `--accent-fluoride` | `#2E7BC4` | `#4C8DE0` | Fluoride Scan / oral care flow |
+| `--gcheck-accent` | `#006C4A` | `#6FE0B4` | Active nav, meter fill, inline links |
+| `--gcheck-mint` | `#82F5C1` | `#2F6F57` | Success mint — always translucent (25–60%) |
+| `--gcheck-tint` | `#F2F3FF` | `#17202E` | Metric bar, inputs, thumbnail wells |
 | `--brand-gradient-start` | `#DFF7F1` | — | Onboarding/auth gradient start (light only) |
 | `--brand-gradient-end` | `#F0FBFF` | — | Onboarding/auth gradient end (light only) |
+
+#### 1.1a Product palette — ink, brand, emerald, cyan, mint
+
+⚠️ **This section was missing while the code was already using these colours.**
+The visual redesign shipped a slate-navy / cyan palette as ~155 literal hex
+values across 12 screens. Because a hex in a className cannot be overridden by a
+`dark:` utility, those screens stayed light while `/history` and `/settings` went
+dark, and §6's "no raw hex in component code" could never pass. The values below
+were adopted *from* the shipped UI, so adopting them is a zero-visual-change
+refactor, not a repaint.
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--ink-strong` | `#111C2D` | `#F2F7FC` | Headings on entry/auth screens |
+| `--ink` | `#182234` | `#E6EDF5` | Primary body + heading text |
+| `--ink-secondary` | `#293446` | `#CBD7E4` | Emphasised secondary text |
+| `--ink-muted` | `#647184` | `#9AABBE` | Supporting / helper text |
+| `--ink-subtle` | `#82909A` | `#7D8EA3` | Least-important metadata |
+| `--surface-subtle` … `--surface-tinted` | `#F4F7FA` … `#E7EDF2` | dark equivalents | Grey surface ramp |
+| `--brand-strong` / `--brand` / `--brand-deep` / `--brand-ink` | `#0D52D6` / `#1454D4` / `#174CA5` / `#164AAF` | light blues | Primary CTA, links, active nav |
+| `--brand-soft` … `--brand-wash-3` | `#E7EEFF` … `#E1EAFF` | dark equivalents | Blue washes / tinted panels |
+| `--emerald-strong` … `--emerald-bright` | `#006C45` … `#008D7B` | light greens | Success, verified states |
+| `--emerald-tint` … `--emerald-on-brand` | `#D6F3E7` … `#9BF0C0` | dark equivalents | Green washes and hairlines |
+| `--cyan` / `--cyan-mid` / `--cyan-soft` | `#00BFD6` / `#09A9D0` / `#75C9D8` | light cyans | Analyze / progress family |
+| `--cyan-wash` … `--cyan-ink` | `#E5F7FB` … `#073B48` | dark equivalents | Cyan washes + deep cyan text |
+| `--mint-hairline` / `--mint` / `--mint-start` | `#B9ECEB` / `#D9F7F6` / `#DCF8F5` | dark equivalents | Guest / nav surfaces |
+| `--rose` / `--rose-wash` / `--rose-wash-2` | `#DF374C` / `#FFF0F1` / `#FFF4F4` | dark equivalents | Destructive on the product palette |
+| `--amber` | `#DF9B00` | `#E8B04A` | Warnings on the product palette |
+
+**Two rules that keep this from drifting again:**
+
+1. **Every one of these is exact.** `text-ink` resolves to `#182234`, so
+   replacing `text-[#182234]` with it is a zero-diff change. Do not "snap a hex
+   to the nearest token" — that silently recolours approved work. If a new colour
+   is genuinely needed, add a token for it; don't round it onto an existing one.
+2. **The core tokens are not re-pointed at the product palette.**
+   `--success` / `--warning` / `--destructive` / `--confidence-*` drive
+   `ResultBadge` and `ConfidenceBadge`. Recolouring those would break the
+   two-badge constraint §2 is built to protect.
+
+**The only legal raw hex values in `src/`:**
+- third-party brand marks in `ProviderGlyph.tsx` (Google ×4, Facebook ×1) — a
+  brand button must use that company's actual colour
+- `themeColor` in `src/app/layout.tsx` — Next resolves it at build time into a
+  `<meta>` tag, where no CSS variable can reach
+
+`npm run palette:check` fails the build if anything else appears.
 
 Category accents — used consistently everywhere that category appears
 (icons, tags, card left-border, chart fills). This mapping is a wayfinding
@@ -278,11 +342,26 @@ contained to the relevant section.
 
 ### Navigation
 
-Bottom tab bar (mobile, public-facing): 3 items max (Home / History /
-Settings), icon + label, active item in `--primary`, inactive in
-`--muted-foreground`. Side drawer (the "John Rita" profile panel):
-`radius-lg` on the leading edge only, slides in from left, 250ms, with
-the same backdrop treatment as modals.
+Bottom tab bar (mobile, public-facing), one set for everyone — the design has
+no guest/member split: **Home / Scan / History / Learn**, with Scan raised into
+a circular button. Icon + label; active item in `--gcheck-accent`, inactive in
+`--gcheck-body`.
+
+Visibility is TWO questions and they are deliberately kept apart
+(`src/lib/navVisibility.ts`):
+
+- **Route** — the pre-auth entry screens (`/onboarding`, `/register`, `/login`,
+  `/auth/*`) and `/admin` never show the bar at all.
+- **Page** — a page that owns the whole screen may hide it *temporarily*.
+  Only the scan viewfinder and the analyzing screen do; review, a result, the
+  add-product form and the thanks screen all keep it.
+
+Hiding it for the whole of `/scan` is explicitly wrong: that removes the tab bar
+which owns the tab the user just tapped and strands them on the result with no
+navigation. `src/components/layout/BottomNav.test.tsx` pins the rule.
+
+The account panel is a right-hand sheet opened from the avatar, and it is where
+sign-out lives — there is no side drawer.
 
 ### Pagination (admin queue)
 
@@ -331,22 +410,54 @@ completion.
 
 ## 5. Responsiveness
 
-Breakpoints (Tailwind defaults, used as-is):
+### 5.1 The app is mobile-only (1025px gate)
+
+MUTAGENIC is a phone/tablet app. It is **not** a wide layout that happens to also
+work on a phone: the 402pt column is the whole design, and above a tablet there
+is nothing to show.
+
+So above **1024px** the app shell is hidden and replaced by a full-viewport
+"Switch to a mobile device" notice (`src/components/layout/MobileOnlyGate.tsx`,
+rule in `globals.css`).
+
+Why 1024 and not Tailwind's `md` (768) or `lg` (1024):
+
+- **iPads are supported devices.** Every iPad in portrait is at or under 1024
+  (the 12.9" Pro is exactly 1024). A `md` boundary would lock out the very
+  tablets we support; a `lg` boundary (`min-width: 1024px`) would lock out only
+  the 12.9" Pro. The rule is therefore `min-width: 1025px`, which puts the line
+  between the widest iPad (1024) and the smallest common laptop (1280).
+- **`/admin` is exempt.** Reviewing a submission queue is a desk task, and the
+  console predates this rule. The admin layout carries a `data-desktop-ok`
+  marker and `:has()` stands the gate down for that subtree.
+- **It is pure CSS, deliberately.** A JS viewport check would paint the desktop
+  shell for a frame before the notice appeared, and would blank the page until
+  hydration. The gate is server-rendered and shown or hidden by the media query
+  alone. If `:has()` is unsupported the selectors are dropped and a desktop
+  falls back to showing the app rather than to a dead end.
+
+Any screen that sizes itself for desktop conflicts with this rule. `/history`
+and `/settings` used to open at `max-w-2xl` / `max-w-lg` through `PageContainer`
+and are now capped at the app's 402pt column like every other screen.
+
+The Playwright suite runs at a 402×874 viewport for the same reason — a desktop
+viewport would test a screen no user is meant to reach.
+
+### 5.2 Breakpoints inside the app
 
 | Breakpoint | Width | Primary audience |
 |---|---|---|
-| Base (mobile) | <640px | Public scan flow — this is the primary target, design mobile-first |
+| Base (mobile) | <640px | Public scan flow — the primary target, design mobile-first |
 | `sm` | ≥640px | Larger phones, no structural change needed |
-| `md` | ≥768px | Tablet — admin queue gains a two-column layout |
-| `lg` | ≥1024px | Desktop — admin queue becomes the primary use case here |
-| `xl` | ≥1280px | Wide desktop — admin queue gets a persistent side nav instead of a drawer |
+| `md` | ≥768px | Tablets — admin queue gains a two-column layout |
+| `lg`–`xl` | ≥1024px / ≥1280px | Admin console only — gate stops everyone else at 1024 |
 
 Rules:
 - The public scan flow (capture, verdict, submission) is designed
   mobile-first and stays single-column at every breakpoint — this is a
   phone-camera task, there's no meaningful desktop version of it, and it
   should not be stretched into a wide layout just because the viewport
-  allows it. Cap its max-width (~480px) and center it on larger screens.
+  allows it. Cap its max-width at the app's 402pt column and center it.
 - The admin review queue is the one surface that should meaningfully
   restructure across breakpoints — mobile gets a stacked card list
   (matching `SubmissionRow`'s current card treatment), `md`+ gets the
@@ -377,6 +488,28 @@ Run this before considering any redesigned screen done:
 - [ ] No third color hue introduced beyond: primary blue, GMO green,
       fluoride blue, semantic success/warning/destructive/muted,
       confidence blue/gray
+- [ ] No raw hex in any component that a `dark:` variant exists for. A literal
+      hex in a `className` wins over every `dark:` utility, which is why the
+      redesign pass left ten screens light while the rest of the app went dark.
+      `npm run palette:check` enforces this — the only exemptions are the five
+      brand marks in `ProviderGlyph.tsx` and the build-time `themeColor` meta.
+- [ ] New colours are added as **tokens at their exact intended value**, never
+      mapped onto the nearest existing token — see §1.1a rule 1
+- [ ] **Tailwind's built-in palette is just as opaque as a raw hex.** `bg-white`
+      has no `dark:` variant, so a white card stays white while its text inverts.
+      Surfaces use `bg-surface`; text on a saturated fill uses
+      `text-ink-on-brand`. `npm run palette:check` catches these too — in all
+      three syntactic forms (`bg-white`, `!bg-white`, `[&_button]:bg-white`), each
+      of which has broken dark mode here at least once.
+- [ ] **Contrast-audit both themes in the browser, not in the source.** Grep finds
+      nothing wrong with `[&_button]:bg-white`; the rendered page tells you
+      immediately. There is no substitute for this — 9 dashboard elements sat at
+      1.1:1 and the `/login` OAuth buttons at **1.0:1** while every static check
+      passed.
+- [ ] **Audit icon-only controls too.** An audit that walks leaf text nodes
+      reports the OAuth buttons clean, because their label is an `aria-label` and
+      the visible pixels are SVG. Audit every element that paints its own
+      background and has visible content, text *or* icon.
 
 **Contrast**
 - [ ] All body text ≥4.5:1 contrast against its background
@@ -420,7 +553,17 @@ Run this before considering any redesigned screen done:
       `aria-describedby`), not just a border color change
 
 **Regression**
-- [ ] `npx vitest run` — all 101 tests still pass after the visual pass
+- [ ] `npx vitest run` — all tests pass after the visual pass
 - [ ] Manually re-run one full scan → verdict → low-confidence submission
       → admin approve cycle after the redesign, to confirm no interaction
       broke under new markup
+- [ ] Touch targets: every interactive element ≥44×44px. The redesign pass
+      previously overrode the `Button` primitive downward (15px–40px) on ~15
+      screens; `h-11` / `size-11` is the floor, not the default `h-10`/`size-10`
+      a `size="sm"` button carries
+- [ ] No `localStorage`/`sessionStorage` read in a `useState` initializer —
+      that runs during SSR and causes a guaranteed hydration mismatch. Read
+      through `useSyncExternalStore` with a referentially stable snapshot
+- [ ] Screen-reader check on `ResultGauge`: it must NOT be `role="img"` with an
+      `aria-label`, which hides the centre readout (the actual ppm / crop count)
+      from assistive tech

@@ -15,7 +15,8 @@ export function RecomputePreview({ result }: { result: EngineResult | null }) {
   if (!result) {
     return (
       <Panel variant="hairline" className="border-dashed text-sm text-muted-foreground">
-        No rules engine for this category yet (fluoride lands in Phase 6).
+        No verdict could be computed for these values — check the ingredients text
+        is non-empty and the category is routable.
       </Panel>
     )
   }
@@ -27,7 +28,7 @@ export function RecomputePreview({ result }: { result: EngineResult | null }) {
         <ResultBadge tier={result.result.tier} label={result.result.label} />
         <ConfidenceBadge tier={result.confidence.tier} factors={result.confidence.factors} />
       </div>
-      <MatchedTermsList terms={result.matchedTerms} />
+      <MatchedTermsList terms={result.matchedTerms} category={result.category} />
     </Panel>
   )
 }

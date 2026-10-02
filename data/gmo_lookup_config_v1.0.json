@@ -1,6 +1,6 @@
 {
-  "project": "SHF GMO Likelihood Detection — Lookup Config v1.0",
-  "version": "1.0",
+  "project": "SHF GMO Likelihood Detection — Lookup Config v1.1",
+  "version": "1.1",
   "certification_short_circuit": {
     "note": "Check BEFORE ingredient matching. A certification is stronger evidence than any ingredient match.",
     "terms": ["Non-GMO Project Verified", "USDA Organic", "Certified Organic", "EU Organic"],
@@ -12,15 +12,13 @@
       { "crop_family": "corn", "aliases": ["corn", "corn starch", "cornstarch", "corn syrup", "high fructose corn syrup", "corn oil", "dextrose (corn-derived)"] },
       { "crop_family": "soy", "aliases": ["soy", "soybean", "soybean oil", "soy lecithin", "soy protein", "textured vegetable protein"] },
       { "crop_family": "canola", "aliases": ["canola", "canola oil", "rapeseed oil"] },
-      { "crop_family": "cottonseed", "aliases": ["cottonseed", "cottonseed oil"] },
+      { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
       { "crop_family": "sugar_beet", "aliases": ["sugar beet", "beet sugar"] },
       { "crop_family": "alfalfa", "aliases": ["alfalfa"] },
       { "crop_family": "papaya", "aliases": ["papaya"] },
       { "crop_family": "apple", "aliases": ["apple"] },
-      { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
-      { "crop_family": "potato", "aliases": ["potato"] },
       { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] },
-      { "crop_family": "salmon", "aliases": ["salmon", "pink salmon", "red salmon", "smoked salmon", "natural salmon", "oncorhynchus gorbuscha", "oncorhynchus nerka"] }
+      { "crop_family": "potato", "aliases": ["potato"] }
     ]
   },
   "ambiguous_derivative_matches": {

@@ -1,0 +1,6 @@
+{
+  "codeConnect": {
+    "include": ["src/**"],
+    "exclude": ["test/**", "docs/**", "build/**"]
+  }
+}

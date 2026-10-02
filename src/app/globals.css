@@ -8,30 +8,31 @@
    references tokens, never raw hex. */
 
 :root {
-  --background: #f5fbfa;
-  --foreground: #0f1b19;
+  --background: #faf8ff;
+  --foreground: #131b2e;
   --surface: #ffffff;
-  --surface-muted: #eef6f5;
+  --surface-muted: #f2f3ff;
   --card: #ffffff;
-  --card-foreground: #0f1b19;
+  --card-foreground: #131b2e;
   --popover: #ffffff;
-  --popover-foreground: #0f1b19;
+  --popover-foreground: #131b2e;
 
-  /* Brand — confident mid-blue (primary CTA, links, active nav, focus rings). */
-  --primary: #1e5aa8;
+  /* Brand — GMO CHECK deep regulatory green (primary CTA, active nav, focus
+     rings). Measured off the Figma file rather than eyeballed. */
+  --primary: #00362a;
   --primary-foreground: #ffffff;
 
-  --secondary: #eef6f5;
-  --secondary-foreground: #0f1b19;
-  --muted: #eef6f5;
-  --muted-foreground: #5b6b68;
-  --accent: #eef6f5;
-  --accent-foreground: #0f1b19;
-  --destructive: #c7473f;
+  --secondary: #eaedff;
+  --secondary-foreground: #131b2e;
+  --muted: #f2f3ff;
+  --muted-foreground: #707975;
+  --accent: #f2f3ff;
+  --accent-foreground: #131b2e;
+  --destructive: #df374c;
   --destructive-foreground: #ffffff;
-  --border: #dceae8;
-  --input: #dceae8;
-  --ring: #1e5aa8;
+  --border: #eaedff;
+  --input: #eaedff;
+  --ring: #006c4a;
 
   /* Semantic tiers — result + status language (green/amber/red). */
   --success: #1f9d6b;
@@ -41,10 +42,17 @@
 
   /* Category accents — wayfinding system (green = GMO/food, blue = oral care).
      Never swap this mapping per screen. */
-  --accent-gmo: #1f9d6b;
-  --accent-gmo-soft: #e4f7ee;
+  --accent-gmo: #006c4a;
+  --accent-gmo-soft: #e4f9ee;
   --accent-fluoride: #2e7bc4;
   --accent-fluoride-soft: #e6f1fb;
+
+  /* Umbrella accent — MUTAGENIC itself, in the wordmark's teal. The entry
+     surfaces (onboarding, auth) have to speak in one colour before the user
+     has chosen a flow, and borrowing either category accent there would
+     imply that flow has already been picked. */
+  --accent-mutagenic: #006a65;
+  --accent-mutagenic-soft: #e2f4f2;
 
   /* Confidence — blue/gray trust hues, deliberately outside the
      green/amber/red result family (06_AGENT_CONTEXT.md §2). */
@@ -56,6 +64,115 @@
   /* Brand gradients — entry / marketing surfaces only, light theme. */
   --brand-gradient-start: #dff7f1;
   --brand-gradient-end: #f0fbff;
+
+  /* ---------------------------------------------------------------------
+     Product palette — the slate/cyan system from the visual redesign.
+
+     These colours shipped as hardcoded hex values across 12 screens
+     (DashboardHeader, guest-dashboard, scan, AnalyzeScreen, CameraView,
+     BottomNav, StepProgressHeader, the auth forms and onboarding). They are
+     tokenised here so no screen owns a private colour and so every one of
+     those screens responds to dark mode — which it previously could not,
+     because a literal hex cannot be overridden by a `dark:` variant.
+
+     The core tokens above are deliberately NOT re-pointed at these values:
+     `--success` / `--warning` / `--destructive` / `--confidence-*` drive
+     ResultBadge and ConfidenceBadge, and those already render correctly from
+     tokens. Re-pointing them would recolour the verdict badges, which is the
+     one thing 06_AGENT_CONTEXT.md §2 says must never drift.
+
+     Names describe ROLE, not hue, so a hue decision can change without
+     touching call sites.
+     --------------------------------------------------------------------- */
+
+  /* Ink — text hierarchy (cool navy, darker = stronger). */
+  --ink-strong: #111c2d;   /* headings on entry/auth screens */
+  --ink: #182234;          /* primary body + heading text */
+  --ink-secondary: #293446;/* emphasised secondary text */
+  --ink-muted: #647184;    /* supporting / helper text */
+  --ink-subtle: #82909a;   /* least important metadata */
+  --ink-on-brand: #ffffff;
+
+  /* Surfaces — cool greys, lightest first. */
+  --surface-subtle: #f4f7fa;
+  --surface-sunken: #f0f3f8;
+  --surface-inset: #f3f6f8;
+  --surface-hairline: #edf0f3;
+  --surface-tinted: #e7edf2;
+
+  /* Brand blue — primary CTA, links, active nav. */
+  --brand-strong: #0d52d6;
+  --brand: #1454d4;
+  --brand-deep: #174ca5;
+  --brand-ink: #164aaf;
+  --brand-soft: #e7eeff;
+  --brand-tinted: #edf1ff;
+  --brand-wash: #f2f7ff;
+  --brand-wash-2: #dee8ff;
+  --brand-wash-3: #e1eaff;
+
+  /* Emerald — success, verified states, GMO category accents. */
+  --emerald-strong: #006c45;
+  --emerald-deep: #00744d;
+  --emerald: #008b60;
+  --emerald-mid: #008c72;
+  --emerald-bright: #008d7b;
+  --emerald-tint: #d6f3e7;
+  --emerald-soft: #d8f7e8;
+  --emerald-wash: #e9fff6;
+  --emerald-wash-2: #f2fff9;
+  --emerald-hairline: #a8eed0;
+  --emerald-on-brand: #9bf0c0;
+
+  /* Cyan — the analyze/progress family. */
+  --cyan: #00bfd6;
+  --cyan-mid: #09a9d0;
+  --cyan-soft: #75c9d8;
+  --cyan-hairline: #8ccfda;
+  --cyan-tint: #c5f0f5;
+  --cyan-soft-line: #d5edf3;
+  --cyan-border: #dceaf3;
+  --cyan-wash: #e5f7fb;
+  --cyan-wash-2: #e8f6fb;
+  --cyan-wash-3: #e8fbff;
+  --cyan-ink: #073b48;   /* deep cyan text on the light washes above */
+
+  /* Mint — guest/nav surfaces. */
+  --mint-hairline: #b9eceb;
+  --mint: #d9f7f6;
+  --mint-start: #dcf8f5;
+
+  /* Rose — destructive states on the product palette. */
+  --rose: #df374c;
+  --rose-wash: #fff0f1;
+  --rose-wash-2: #fff4f4;
+
+  /* Amber — warnings on the product palette. */
+  --amber: #df9b00;
+
+  /* ---------------------------------------------------------------------
+     MUTAGENIC is the umbrella brand; "GMO Check" and "Fluoride Scan" are its
+     two flows. The wordmark teal belongs to the umbrella rather than either
+     flow, so it is named for its role. */
+  --wordmark: #006a65;
+
+  /* ---------------------------------------------------------------------
+     GMO CHECK — the identity, measured from the Figma design file
+     (`bobby`, screen 1 "Dashboard"). Only the values with no equivalent in
+     the groups above live here; the rest of the design maps onto an
+     existing core token (canvas #faf8ff → --background, deep green #00362a
+     → --primary, accent green #006c4a → --ring, lavender tint #f2f3ff →
+     --muted, rose #df374c → --destructive).
+
+     `--gcheck-accent` is deliberately separate from `--ring` even though
+     both are #006c4a today: an active nav item and a focus ring are two
+     different decisions, and either must be able to move alone.
+     --------------------------------------------------------------------- */
+  --gcheck-accent: #006c4a;     /* active nav, confidence meter fill, inline links */
+  --gcheck-body: #404945;       /* body + supporting copy on cards */
+  --gcheck-tint: #f2f3ff;       /* metric bar, inputs, thumbnail wells */
+  --gcheck-mint: #82f5c1;       /* success mint — always translucent (25–60%) */
+  --gcheck-pill-ink: #00714e;   /* text and icons sitting on a mint pill */
 
   --radius: 1rem;
 }
@@ -71,8 +188,8 @@
     --popover: #101e1b;
     --popover-foreground: #eaf3f1;
 
-    --primary: #4c8de0;
-    --primary-foreground: #0b1614;
+    --primary: #7fe3bb;
+    --primary-foreground: #06120e;
 
     --secondary: #16241f;
     --secondary-foreground: #eaf3f1;
@@ -80,26 +197,104 @@
     --muted-foreground: #9ab0ac;
     --accent: #16241f;
     --accent-foreground: #eaf3f1;
-    --destructive: #e07a6f;
+    --destructive: #f58a94;
     --destructive-foreground: #ffffff;
     --border: #20302c;
     --input: #20302c;
-    --ring: #4c8de0;
+    --ring: #6fe0b4;
 
     --success: #3dba86;
     --warning: #d9a13b;
     --info: #5b9dbf;
-    --danger: #e07a6f;
+    --danger: #f58a94;
 
     --accent-gmo: #3dba86;
     --accent-gmo-soft: #14231d;
     --accent-fluoride: #4c8de0;
     --accent-fluoride-soft: #14212e;
+    --accent-mutagenic: #4fc4b4;
+    --accent-mutagenic-soft: #10312e;
 
     --confidence-high: #6fa8c8;
     --confidence-medium: #7eb2d0;
     --confidence-low: #7c8a86;
     --tier-none: #7c8a86;
+
+    /* Product palette — dark variants. Without these, the twelve screens that
+       used hardcoded hex values could never respond to dark mode: a literal
+       hex in a className wins over any `dark:` utility. Now that each value
+       is a token, `prefers-color-scheme: dark` reaches them.
+
+       Tuned for contrast against the dark surfaces above: inks invert to pale
+       text, washes darken to tinted panels, and each family's mid tone is
+       lifted so it stays legible on dark. */
+    --ink-strong: #f2f7fc;
+    --ink: #e6edf5;
+    --ink-secondary: #cbd7e4;
+    --ink-muted: #9aabbe;
+    --ink-subtle: #7d8ea3;
+    --ink-on-brand: #0b1614;
+
+    --surface-subtle: #131f2b;
+    --surface-sunken: #101a24;
+    --surface-inset: #14212d;
+    --surface-hairline: #223141;
+    --surface-tinted: #1b2b3a;
+
+    --brand-strong: #6ea3ff;
+    --brand: #7fb0ff;
+    --brand-deep: #bcd7ff;
+    --brand-ink: #8bb8ff;
+    --brand-soft: #14233a;
+    --brand-tinted: #16273d;
+    --brand-wash: #131f30;
+    --brand-wash-2: #16243a;
+    --brand-wash-3: #182944;
+
+    --emerald-strong: #6fe0b4;
+    --emerald-deep: #57d3a3;
+    --emerald: #45c795;
+    --emerald-mid: #3fbd8d;
+    --emerald-bright: #4ecfa6;
+    --emerald-tint: #10301f;
+    --emerald-soft: #123524;
+    --emerald-wash: #0f2b1d;
+    --emerald-wash-2: #12291f;
+    --emerald-hairline: #1d5540;
+    --emerald-on-brand: #0f2b1d;
+
+    --cyan: #4fd3e6;
+    --cyan-mid: #45c3d8;
+    --cyan-soft: #3aa9bd;
+    --cyan-hairline: #35879a;
+    --cyan-tint: #10303a;
+    --cyan-soft-line: #143641;
+    --cyan-border: #1a3d4a;
+    --cyan-wash: #102a33;
+    --cyan-wash-2: #122e38;
+    --cyan-wash-3: #14313c;
+    --cyan-ink: #8fdcea;   /* inverts: light cyan text on the dark washes */
+
+    --mint-hairline: #1f4d52;
+    --mint: #14353a;
+    --mint-start: #153840;
+
+    --rose: #f58a94;
+    --rose-wash: #2c1418;
+    --rose-wash-2: #311519;
+
+    --amber: #e8b04a;
+
+    /* GMO CHECK — dark variants. Mint stays a LIGHT accent (a mint that
+       darkens stops being mint, so it becomes a deep green wash instead),
+       while the deep greens lift so text and controls keep their contrast
+       against the dark canvas. */
+    --wordmark: #4fc4b4;
+    --gcheck-accent: #6fe0b4;
+    --gcheck-body: #b9c4bf;
+    --gcheck-tint: #17202e;
+    --gcheck-mint: #2f6f57;
+    --gcheck-pill-ink: #9bf0c0;
   }
 }
 
@@ -108,7 +303,9 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
-  --font-sans: var(--font-geist-sans);
+  /* GMO CHECK sets every screen in Inter (Figma `bobby`). Geist is kept as
+     the mono face only. */
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -136,6 +333,8 @@
   --color-accent-gmo-soft: var(--accent-gmo-soft);
   --color-accent-fluoride: var(--accent-fluoride);
   --color-accent-fluoride-soft: var(--accent-fluoride-soft);
+  --color-accent-mutagenic: var(--accent-mutagenic);
+  --color-accent-mutagenic-soft: var(--accent-mutagenic-soft);
 
   --color-confidence-high: var(--confidence-high);
   --color-confidence-medium: var(--confidence-medium);
@@ -144,6 +343,74 @@
 
   --color-brand-gradient-start: var(--brand-gradient-start);
   --color-brand-gradient-end: var(--brand-gradient-end);
+
+  /* Product palette — see the token block in :root for why these exist
+     separately from the core tokens above. */
+  --color-ink-strong: var(--ink-strong);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-ink-on-brand: var(--ink-on-brand);
+
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-inset: var(--surface-inset);
+  --color-surface-hairline: var(--surface-hairline);
+  --color-surface-tinted: var(--surface-tinted);
+
+  --color-brand-strong: var(--brand-strong);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-tinted: var(--brand-tinted);
+  --color-brand-wash: var(--brand-wash);
+  --color-brand-wash-2: var(--brand-wash-2);
+  --color-brand-wash-3: var(--brand-wash-3);
+
+  --color-emerald-strong: var(--emerald-strong);
+  --color-emerald-deep: var(--emerald-deep);
+  --color-emerald: var(--emerald);
+  --color-emerald-mid: var(--emerald-mid);
+  --color-emerald-bright: var(--emerald-bright);
+  --color-emerald-tint: var(--emerald-tint);
+  --color-emerald-soft: var(--emerald-soft);
+  --color-emerald-wash: var(--emerald-wash);
+  --color-emerald-wash-2: var(--emerald-wash-2);
+  --color-emerald-hairline: var(--emerald-hairline);
+  --color-emerald-on-brand: var(--emerald-on-brand);
+
+  --color-cyan: var(--cyan);
+  --color-cyan-mid: var(--cyan-mid);
+  --color-cyan-soft: var(--cyan-soft);
+  --color-cyan-hairline: var(--cyan-hairline);
+  --color-cyan-tint: var(--cyan-tint);
+  --color-cyan-soft-line: var(--cyan-soft-line);
+  --color-cyan-border: var(--cyan-border);
+  --color-cyan-wash: var(--cyan-wash);
+  --color-cyan-wash-2: var(--cyan-wash-2);
+  --color-cyan-wash-3: var(--cyan-wash-3);
+  --color-cyan-ink: var(--cyan-ink);
+
+  --color-mint-hairline: var(--mint-hairline);
+  --color-mint: var(--mint);
+  --color-mint-start: var(--mint-start);
+
+  --color-rose: var(--rose);
+  --color-rose-wash: var(--rose-wash);
+  --color-rose-wash-2: var(--rose-wash-2);
+
+  --color-amber: var(--amber);
+
+  /* GMO CHECK identity — see the token block in :root for why these exist
+     separately from the core palette. */
+  --color-wordmark: var(--wordmark);
+  --color-gcheck-accent: var(--gcheck-accent);
+  --color-gcheck-body: var(--gcheck-body);
+  --color-gcheck-tint: var(--gcheck-tint);
+  --color-gcheck-mint: var(--gcheck-mint);
+  --color-gcheck-pill-ink: var(--gcheck-pill-ink);
 
   /* Spacing scale — 4px base unit, named steps per 08 §1.3. These are the
      ONLY spacing increments shared components may use; off-scale pixel values
@@ -198,7 +465,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-sans);
 }
 
 /* Brand gradient — entry/marketing surfaces only (onboarding, auth). Light
@@ -210,6 +477,48 @@ body {
 @media (prefers-color-scheme: dark) {
   .bg-brand-gradient {
     background: var(--background);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Mobile-only gate.
+
+   MUTAGENIC is a camera-first phone/tablet app. Its 402pt column is the whole
+   layout, not a breakpoint inside a wider one, so above a tablet there is
+   nothing to show — the shell is hidden and a "Switch to a mobile device"
+   notice takes the viewport.
+
+   The boundary is 1024px, NOT the usual `lg` (1024) or `md` (768) Tailwind
+   breakpoint. iPads are supported devices: every iPad in portrait is at or
+   under 1024 (the 12.9" Pro is exactly 1024), while the smallest common
+   laptop is 1280. A `md` boundary would lock out the tablets we do support;
+   a `lg` boundary would lock out the 12.9" iPad. `min-width: 1025px` puts the
+   line between them.
+
+   /admin is exempt. The review console is a desk task — reviewing a queue of
+   submissions is not something you do on a phone — and it predates this rule.
+   The admin layout renders a `data-desktop-ok` marker and `:has()` below
+   stands the rule down for that subtree.
+
+   Pure CSS, deliberately. A JS viewport check would paint the desktop shell
+   for a frame before the notice appeared, and would blank the page entirely
+   until hydration. The gate markup is server-rendered and shown or hidden by
+   this media query alone.
+
+   If `:has()` is unsupported the selectors are invalid and dropped, so a
+   desktop falls back to showing the app rather than to a dead end.
+   --------------------------------------------------------------------- */
+[data-mobile-gate] {
+  display: none;
+}
+
+@media (min-width: 1025px) {
+  html:not(:has([data-desktop-ok])) [data-app-shell] {
+    display: none;
+  }
+
+  html:not(:has([data-desktop-ok])) [data-mobile-gate] {
+    display: flex;
   }
 }
 

@@ -31,6 +31,30 @@ Unlike GMO detection, fluoride is usually stated explicitly on a label — "sodi
 
 Non-active/fluoride-free markers: nano-hydroxyapatite, calcium carbonate, sodium bicarbonate, xylitol — all map to `default_ppm: 0, classification: Fluoride-Free`.
 
+### 4a. Search both label panels, and read a stated ppm directly
+
+Two additions to the compound-only path above, both because real packaging does
+not always follow it:
+
+**Search the front panel too.** FR-1 assigns the front panel the product name,
+brand and category cues, and toothpaste/mouthwash claims are routinely printed
+across the face of the pack. The engine receives front-panel OCR text via
+`EngineContext.packageFrontText` and matches against both panels, preferring a
+quantified reading from the ingredient panel (it is authoritative) and falling
+back to the front only when the back produced no number.
+
+**Read a ppm stated without naming the salt.** Every row in §4 names a specific
+compound, so a pack that just declares its own concentration — *"Fluoride
+Toothpaste 1450 ppm"*, *"1450 ppm fluoride"* — could not be matched at all when
+the salt name was absent or garbled, and returned "No Data". A printed ppm is
+the label's own statement of fluoride content; it needs no multiplier and is
+stronger evidence than a `default_ppm` fallback, so it is accepted with
+`defaultPpm: false`.
+
+The direct-ppm pattern stays anchored to the word "fluoride" with a bounded,
+digit-free window, so an unrelated figure elsewhere on the panel (e.g. *"contains
+500 ppm of a preservative"*) is never read as the product's fluoride level.
+
 ## 5. Subcategory detection
 
 | Subcategory | Keyword signals |

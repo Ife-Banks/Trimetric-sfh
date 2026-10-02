@@ -7,20 +7,13 @@
 
 import { cn } from "cn"
 import type { ResultTier } from "@/engines/types"
+import { TIER_FRACTION } from "@/components/verdict/gaugeValue"
 
 const TIER_COLOR: Record<ResultTier, string> = {
   low: "text-success",
   medium: "text-warning",
   high: "text-destructive",
   none: "text-tier-none",
-}
-
-// Severity expression, not a score: the arc grows with the tier.
-const TIER_FRACTION: Record<ResultTier, number> = {
-  none: 0,
-  low: 0.28,
-  medium: 0.55,
-  high: 0.82,
 }
 
 export function ResultGauge({
@@ -37,8 +30,15 @@ export function ResultGauge({
   const fraction = TIER_FRACTION[tier]
   const offset = circumference * (1 - fraction)
 
+  // The ring itself is decorative — ResultBadge beside it already states the
+  // result tier in text (that separation is the whole point of the two-badge
+  // constraint). This must NOT be role="img" with an aria-label: that replaces
+  // the subtree for assistive tech, which hid the centre readout entirely — a
+  // screen-reader user heard "Result: medium, image" and never heard
+  // "1450 ppm fluoride", the actual metric. Instead the svg is hidden and the
+  // real value is exposed as ordinary text.
   return (
-    <div className={cn("relative size-40", className)} role="img" aria-label={`Result: ${tier}`}>
+    <div className={cn("relative size-40", className)}>
       <svg viewBox="0 0 120 120" className="size-full -rotate-90" aria-hidden="true">
         <circle
           cx="60"
@@ -63,6 +63,7 @@ export function ResultGauge({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="sr-only">Result reading: </span>
         {value ? (
           <>
             <span className="text-h1 font-bold tracking-tight tabular-nums">{value.number}</span>

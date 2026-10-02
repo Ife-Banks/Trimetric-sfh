@@ -2,20 +2,47 @@ import "server-only"
 
 import { getServerSupabase, getUserServerSupabase } from "@/lib/supabase/server"
 import { createRateLimiter } from "@/lib/rateLimit"
+import { correlationId, serverError } from "@/lib/api/http"
 import { SUBMISSION_RATE_LIMIT, submissionPayloadSchema } from "@/lib/validation/schemas"
 
-// Per-process sliding-window limiter (in-memory). Fine for a single Next node;
-// Phase 7 hardening can swap the backend for something shared (Redis) if the
-// app is ever run multi-instance.
+// Per-process sliding-window limiter (in-memory). State is per Node instance,
+// so a cold start resets the window and N instances each allow N× the limit.
+// It is defence in depth only — the primary control for anonymous writes is
+// the hardened `submissions_insert_anon` RLS policy (migration
+// 20260930090000_harden_submission_inserts), because the anon key ships in the
+// client bundle and a direct PostgREST INSERT bypasses this route entirely.
 const limiter = createRateLimiter({
   windowMs: SUBMISSION_RATE_LIMIT.windowMs,
   max: SUBMISSION_RATE_LIMIT.max,
 })
 
+// `x-forwarded-for` is client-settable: anything that APPENDS rather than
+// overwrites it lets a caller send a fresh value per request and get an
+// unlimited per-IP budget. We only trust it when it is a single well-formed IP
+// (i.e. our own edge is the only proxy that touched it), and we prefer the
+// platform-provided headers. Everything else falls into one shared bucket
+// rather than failing open per-request.
+const IP_PATTERN = /^[0-9a-fA-F:.]{3,45}$/;
+
 function clientIp(request: Request): string {
-  const fwd = request.headers.get("x-forwarded-for")
-  const first = fwd?.split(",")[0]?.trim()
-  return first && first.length > 0 ? first : "unknown"
+  const platformIp =
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-real-ip") ??
+    null;
+  if (platformIp && IP_PATTERN.test(platformIp.trim())) return platformIp.trim();
+
+  const fwd = request.headers.get("x-forwarded-for");
+  if (fwd) {
+    const hops = fwd.split(",").map((h) => h.trim()).filter(Boolean);
+    // A single hop means only one trusted proxy wrote it.
+    if (hops.length === 1 && IP_PATTERN.test(hops[0])) return hops[0];
+    if (hops.length > 1 && hops.every((h) => IP_PATTERN.test(h))) {
+      // Right-most hop was appended by the closest trusted proxy.
+      return hops[hops.length - 1];
+    }
+  }
+  // Unrecognised/absent: collapse into ONE shared bucket so it fails closed.
+  return "unattributed";
 }
 
 function rateLimitResponse(retryAfterSeconds: number): Response {
@@ -29,6 +56,8 @@ function rateLimitResponse(retryAfterSeconds: number): Response {
 }
 
 export async function POST(request: Request) {
+  const correlation = correlationId()
+
   let body: unknown
   try {
     body = await request.json()
@@ -92,6 +121,8 @@ export async function POST(request: Request) {
       certification_text: payload.certificationText || null,
       concentration_text: payload.concentrationText || null,
       photo_path: payload.photoPath,
+      front_photo_path: payload.frontPhotoPath,
+      gmo_status: payload.gmoStatus,
       ocr_confidence: payload.ocrConfidence ?? null,
       engine_preview: payload.enginePreview,
       submitter_fingerprint: payload.fingerprint,
@@ -99,14 +130,18 @@ export async function POST(request: Request) {
     })
 
   if (error) {
-    return Response.json(
-      { error: "insert_failed", message: error?.message ?? "Could not record the submission." },
-      { status: 500 }
+    return serverError(
+      "submissions.insert",
+      error,
+      500,
+      "insert_failed",
+      "Could not record the submission. Please try again.",
+      correlation
     )
   }
 
   return Response.json(
-    { ok: true },
+    { ok: true, correlation },
     {
       status: 201,
       headers: {

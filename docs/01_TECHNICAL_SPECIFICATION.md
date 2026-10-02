@@ -51,15 +51,15 @@ These are non-negotiable and must be visible in the built product:
 - Back is used for the ingredients list.
 - Both images are held in memory client-side; only submitted images are persisted.
 
-### FR-2: Product identification — three tiers, always attempted in order
+### FR-2: Product identification — name and ingredients
 
-Barcode is an accelerator, not the primary input. **The scan always works from the photo** — name and ingredients extracted by OCR — and barcode/name matching only decide whether a *trusted stored verdict* already exists before the rules engine has to run from scratch. This matters especially for informally packaged or local-market products that may never have a barcode at all.
+The scan always OCRs the package front and ingredients panel. The product name is fuzzy-matched against `products.name` within the selected category (trigram similarity). Barcode scanning is not part of the active flow.
 
-1. **Barcode match** — if a barcode is visible and decodable, and it matches a row in `products`, return that stored verdict directly. Skip OCR-based matching and the rules engine entirely. `confidence: High`.
-2. **Product name match** — if no barcode (absent, unreadable, or no match), take the OCR'd front-label text and fuzzy-match it against `products.name` (trigram similarity, see `04_BACKEND_STRUCTURE.md` §2.2). A high-similarity match (above an agreed threshold, e.g. 0.6) returns that stored verdict. `confidence: High` if the match is strong; `Medium` if it's borderline — a weak name match is a real identification, not a certainty.
-3. **Ingredients-only** — no identity match at all. Run the OCR'd ingredients text through the GMO or fluoride rules engine from a cold start, as described in FR-5. This is the fallback that always works, and it's the path most local/unbranded products will actually take.
+- Similarity ≥ 0.8: use the stored product verdict and preserve its confidence tier.
+- Similarity 0.4–0.79: use the stored product verdict but cap confidence at Medium.
+- No name match: run the deterministic category engine on the OCR'd ingredients text.
 
-**The ingredients text is always extracted and always available**, regardless of which tier resolves the identity — tiers 1 and 2 only short-circuit the need to re-run the rules engine when a trusted answer already exists.
+The ingredients text is extracted for every scan, including name matches.
 
 ### FR-3: OCR extraction
 - Runs client-side via Tesseract.js.
@@ -67,7 +67,7 @@ Barcode is an accelerator, not the primary input. **The scan always works from t
 - If mean OCR confidence < 0.6, this feeds the confidence scoring as a penalty.
 
 ### FR-4: Category routing
-- Classify as `gmo_food` or `oral_care` from barcode metadata (if matched) or keyword detection on front-label text.
+- Use the user-selected `gmo_food` or `oral_care` scan category; name search is scoped to that category.
 - If neither classifies, prompt the user to pick a category rather than guessing.
 - Route to exactly one engine. Never run both.
 
@@ -78,7 +78,7 @@ Barcode is an accelerator, not the primary input. **The scan always works from t
 - Both return the identical `EngineResult` shape (see §5).
 
 ### FR-6: Verdict rendering
-- Shared component renders any `EngineResult` regardless of origin — whether freshly computed by an engine (tier 3) or read back from a stored `products` row matched by barcode or name (tiers 1–2). A stored row is mapped into the same `EngineResult` shape at read time so the verdict screen never needs to know which tier produced it.
+- Shared component renders any `EngineResult` regardless of origin — whether freshly computed by an engine or read from a name-matched stored product row.
 - Displays: product identity, result badge, confidence badge, matched terms, guidance text, constraint statement.
 
 ### FR-7: Submission flow
@@ -99,8 +99,7 @@ Barcode is an accelerator, not the primary input. **The scan always works from t
 | Requirement | Target |
 |---|---|
 | Scan-to-verdict time (OCR path) | < 8s on a mid-range Android device |
-| Scan-to-verdict time (barcode path) | < 2s |
-| Offline capability | Capture + OCR + scoring work offline once `lookup_config` is cached; barcode lookup and submission require network |
+| Offline capability | Capture + OCR + scoring work offline once `lookup_config` is cached; catalogue name lookup and submission require network |
 | Bundle size | Tesseract.js language data lazy-loaded, not in the initial bundle |
 | Accessibility | Result and confidence must not rely on colour alone — always paired with text labels |
 | Browser support | Chrome/Safari on mobile, last 2 versions |
@@ -147,7 +146,8 @@ Both engines take the same two arguments. `EngineContext` carries everything the
 interface EngineContext {
   ocrMeanConfidence: number;        // 0–1, from Tesseract's per-block confidence (FR-3)
   isTruncated: boolean;             // OCR pipeline flagged the ingredients list as cut off
-  identityMatch: 'barcode' | 'name' | 'none';  // which FR-2 tier resolved before the engine ran
+  identityMatch: 'barcode' | 'name' | 'none';  // barcode is retained only for legacy stored scan data
+  identitySimilarity?: number;                  // fuzzy name similarity, 0–1
   category: 'gmo_food' | 'oral_care';
   subcategory: string;              // from FR-4 category routing
 }

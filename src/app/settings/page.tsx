@@ -24,7 +24,8 @@ export default async function SettingsPage() {
   }
 
   return (
-    <PageContainer size="sm">
+    // Capped at the app's 402pt column — see history/page.tsx.
+    <PageContainer className="max-w-[402px]">
       <PageHeader
         eyebrow="Account"
         title="Settings"

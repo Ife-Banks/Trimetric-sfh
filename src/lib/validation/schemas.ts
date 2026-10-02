@@ -38,6 +38,8 @@ export const submissionPayloadSchema = z.object({
   certificationText: z.string().trim().max(200).optional().default(""),
   concentrationText: z.string().trim().max(200).optional().default(""),
   photoPath: z.string().regex(photoPathPattern, "Invalid photo path"),
+  frontPhotoPath: z.string().regex(photoPathPattern, "Invalid front photo path").nullish().default(null),
+  gmoStatus: z.enum(["non_gmo_certified", "contains_gmo", "not_sure"]).nullish().default(null),
   ocrConfidence: z.number().min(0).max(1).nullish().default(null),
   enginePreview: enginePreviewSchema,
   fingerprint: z.string().min(8, "Client fingerprint is too short").max(120),
@@ -67,7 +69,14 @@ const engineTermSchema = z.object({
 })
 
 export const finalPayloadSchema = z.object({
-  barcode: z.string().trim().max(32).optional().default(""),
+  // A barcode is the tier-1 identity key, so it must not accept free text:
+  // an admin-session caller could otherwise poison `products.barcode` lookup
+  // for that product with arbitrary strings. Same rule as the submission
+  // schema — 8–14 digits, or empty.
+  barcode: z
+    .union([z.literal(""), z.string().trim().regex(/^[0-9]{8,14}$/, "barcode must be 8–14 digits")])
+    .optional()
+    .default(""),
   name: z.string().trim().min(1, "Name is required").max(200),
   brand: z.string().trim().max(200).optional().default(""),
   category: z.enum(["gmo_food", "oral_care"]),

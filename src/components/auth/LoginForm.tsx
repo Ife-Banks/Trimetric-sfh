@@ -85,11 +85,19 @@ export function LoginForm({ next, error }: { next: string; error: string | null 
   }
 
   return (
-    <AuthScreen>
-      <AuthBrandMark tagline="Good to see you again" />
+    <AuthScreen
+      className="mx-auto min-h-[874px] w-full max-w-[402px] text-ink-strong"
+      contentClassName="px-5 pt-[76px] pb-8 md:px-5"
+      style={{ background: "linear-gradient(180deg, var(--mint) 0%, var(--brand-wash) 100%)", colorScheme: "light" }}
+    >
+      <AuthBrandMark
+        tagline="Good to see you again"
+        titleClassName="text-emerald-mid"
+        taglineClassName="text-[12px] text-ink-strong"
+      />
 
-      <form onSubmit={(e) => void signIn(e)} className="mt-8 space-y-4">
-        <Field label="E-mail" htmlFor="login-email">
+      <form onSubmit={(e) => void signIn(e)} className="mt-12 space-y-[10px]">
+        <Field label="E-mail" htmlFor="login-email" className="space-y-1.5">
           <Input
             id="login-email"
             type="email"
@@ -97,10 +105,11 @@ export function LoginForm({ next, error }: { next: string; error: string | null 
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="!h-[52px] rounded-[12px] border-emerald-mid !bg-surface/20 px-3 text-[14px] !text-ink-strong focus-visible:border-emerald-mid focus-visible:ring-emerald-mid/20"
           />
         </Field>
 
-        <Field label="Password" htmlFor="login-password">
+        <Field label="Password" htmlFor="login-password" className="space-y-1.5">
           <Input
             id="login-password"
             type="password"
@@ -108,13 +117,14 @@ export function LoginForm({ next, error }: { next: string; error: string | null 
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            className="!h-[52px] rounded-[12px] border-emerald-mid !bg-surface/20 px-3 text-[14px] !text-ink-strong focus-visible:border-emerald-mid focus-visible:ring-emerald-mid/20"
           />
         </Field>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <Link
             href="/auth/forgot"
-            className="rounded-sm text-caption font-medium text-muted-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="rounded-sm text-[12px] font-medium text-ink-muted underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             Forgot Password?
           </Link>
@@ -122,7 +132,7 @@ export function LoginForm({ next, error }: { next: string; error: string | null 
 
         {resolvedError && <InlineAlert variant="destructive">{resolvedError}</InlineAlert>}
 
-        <Button type="submit" size="lg" className="w-full rounded-md" disabled={busy !== null}>
+        <Button type="submit" size="lg" className="!h-[52px] w-full rounded-[12px] bg-brand-ink text-[14px] font-semibold uppercase !text-ink-on-brand hover:bg-brand-ink/90" disabled={busy !== null}>
           {busy === "email" ? (
             <>
               <Spinner /> Signing in…
@@ -133,19 +143,27 @@ export function LoginForm({ next, error }: { next: string; error: string | null 
         </Button>
       </form>
 
-      <p className="mt-3 text-center text-body">
-        <span className="text-foreground">Don&apos;t have an Account ?</span>{" "}
+      <p className="mt-3 text-center text-[14px] leading-5 text-ink-strong">
+        <span>Don&apos;t have an Account ?</span>{" "}
         <Link
           href="/register"
-          className="font-semibold text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="ml-1 font-semibold text-emerald-mid underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Register
         </Link>
       </p>
 
-      <AuthOrDivider />
-      <AuthGuestButton busy={busy} onPress={() => router.push(HUB_PATH)} />
-      <AuthProviderButtons busy={busy} onSelect={(provider) => void continueWithOAuth(provider)} />
+      <AuthOrDivider className="mt-2" lineClassName="bg-emerald-mid" />
+      <AuthGuestButton
+        busy={busy}
+        onPress={() => router.push(HUB_PATH)}
+        className="mt-1 !min-h-11 text-[12px] font-semibold text-emerald-mid no-underline"
+      />
+      <AuthProviderButtons
+        busy={busy}
+        onSelect={(provider) => void continueWithOAuth(provider)}
+        className="mt-2 gap-8 [&_button]:border-0 [&_button]:bg-surface [&_button]:text-ink-strong [&_button]:shadow-sm [&_button:hover]:bg-surface"
+      />
     </AuthScreen>
   )
 }

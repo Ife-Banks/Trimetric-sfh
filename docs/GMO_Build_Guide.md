@@ -28,6 +28,8 @@ This constraint isn't a limitation to apologize for — it's the feature that ma
 
 If any of these appear in the OCR'd text or product metadata: **Likelihood = Low, Confidence = High, stop.** A certification is stronger evidence than any ingredient match — don't let ingredient scoring override it.
 
+**Search both label panels.** FR-1 assigns the front panel "product name, brand, category cues, and certification marks", so in practice the seal is printed next to the brand name and is *not* repeated in the ingredient list. The engine receives the front-panel OCR text via `EngineContext.packageFrontText` and searches it alongside the ingredients text. Checking only the ingredient list silently misses the certification and scores the product on its crop ingredients — the exact opposite of the rule above.
+
 ### 3.2 Explicit crop matches (strong evidence — these count toward the likelihood score)
 
 | Crop family | Aliases to match |

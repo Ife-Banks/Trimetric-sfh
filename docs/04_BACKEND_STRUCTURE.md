@@ -123,6 +123,36 @@ create table profiles (
 
 Roles live in a table, not in JWT user metadata. User metadata is client-writable in some Supabase configurations; a table read inside an RLS policy is not.
 
+### 2.6 `scans` — per-user scan history
+
+```sql
+create table scans (
+  id              uuid primary key default gen_random_uuid(),
+  scanned_by      uuid not null references auth.users(id) on delete cascade,
+  product_id      uuid references products(id) on delete set null,
+  category        product_category not null,
+  product_name    text,
+  brand           text,
+  result_tier     verdict_tier not null,
+  result_label    text not null,
+  confidence_tier verdict_tier not null,
+  identity_match  text not null check (identity_match in ('barcode','name','none')),
+  metric          text,
+  created_at      timestamptz not null default now()
+);
+create index scans_scanned_by_created_at_idx on scans (scanned_by, created_at desc);
+```
+
+The third table, and the one that was missing. `products` is the verified dataset and `submissions` is the review queue, so before this there was nowhere to answer "what has this user scanned?" — History fell back to a device-local store, which only held scans the user explicitly chose to keep, only on the device where they kept them.
+
+Three properties are deliberate and load-bearing:
+
+- **A receipt, not a second copy of the verdict.** No image (Storage already holds the ones that matter, full-size, for submissions), no OCR text, no matched terms. The verdict is reproducible from `products` plus the ruleset version.
+- **Append-only from the client.** SELECT and INSERT policies only, nothing for UPDATE or DELETE, so a compromised client cannot rewrite or erase history.
+- **Anonymous scans are not recorded.** `scanned_by` is the RLS key; an unowned row would be either world-readable or invisible. Guests keep the on-device store instead, and the INSERT policy enforces this rather than trusting the client to skip the call.
+
+`product_id` is `on delete set null`, not `cascade`: a receipt records what the user was shown, and that stays true if the catalogue row is later withdrawn.
+
 ---
 
 ## 3. Row Level Security
@@ -134,6 +164,7 @@ alter table products      enable row level security;
 alter table submissions   enable row level security;
 alter table lookup_config enable row level security;
 alter table profiles      enable row level security;
+alter table scans         enable row level security;
 ```
 
 ### Helper

@@ -1,12 +1,15 @@
 import "server-only"
 
 import { isAdminSession, requireAdmin } from "@/lib/admin/api"
+import { correlationId, serverError } from "@/lib/api/http"
 import { rejectPayloadSchema } from "@/lib/validation/schemas"
 
 // POST /api/admin/reject — status only (04_BACKEND_STRUCTURE.md §3). No delete,
 // no write to products. RLS `submissions_update_admin` still governs the write,
 // so a non-admin token updates zero rows even if the route guard were bypassed.
 export async function POST(request: Request) {
+  const correlation = correlationId()
+
   let body: unknown
   try {
     body = await request.json()
@@ -38,12 +41,19 @@ export async function POST(request: Request) {
     .select("id")
 
   if (error) {
-    return Response.json({ error: "reject_failed", message: error.message }, { status: 500 })
+    return serverError(
+      "reject.update",
+      error,
+      500,
+      "reject_failed",
+      "The submission could not be rejected.",
+      correlation
+    )
   }
   if (!data || data.length === 0) {
     // Nothing updated: either the row is gone/already reviewed, or RLS denied it.
     return Response.json({ error: "not_found_or_not_authorized" }, { status: 404 })
   }
 
-  return Response.json({ ok: true })
+  return Response.json({ ok: true, correlation })
 }

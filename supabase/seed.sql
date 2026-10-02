@@ -32,14 +32,24 @@ begin;
 -- 1. lookup_config — published rulesets
 -- ---------------------------------------------------------------------------
 
--- GMO ruleset v1.0 (published). JSON matches data/gmo_lookup_config_v1.0.json.
+-- GMO ruleset v1.1 (published). JSON matches data/gmo_lookup_config_v1.0.json.
+-- v1.1 corrections, both applied in data/gmo_lookup_config_v1.0.json:
+--   1. "cottonseed" and "cotton" were separate crop_family entries with
+--      OVERLAPPING aliases (both claiming cottonseed/cottonseed oil). One crop
+--      could therefore be counted as two distinct families, inflating N and
+--      pushing a Medium verdict to High. GMO_Build_Guide.md §3.2 lists a single
+--      cotton family. Merged.
+--   2. "salmon" was present as an explicit GMO crop. Salmon is an animal
+--      product, not a genetically modified crop; the archived spec recorded
+--      "salmon excluded as not relevant" and the entry was reintroduced in
+--      error. Left in, smoked salmon scored "High GMO Likelihood". Removed.
 insert into lookup_config (category, version, config_json, is_published, published_at)
 select
   'gmo_food',
-  '1.0',
+  '1.1',
   '{
-  "project": "SHF GMO Likelihood Detection — Lookup Config v1.0",
-  "version": "1.0",
+  "project": "SHF GMO Likelihood Detection — Lookup Config v1.1",
+  "version": "1.1",
   "certification_short_circuit": {
     "note": "Check BEFORE ingredient matching. A certification is stronger evidence than any ingredient match.",
     "terms": ["Non-GMO Project Verified", "USDA Organic", "Certified Organic", "EU Organic"],
@@ -51,15 +61,13 @@ select
       { "crop_family": "corn", "aliases": ["corn", "corn starch", "cornstarch", "corn syrup", "high fructose corn syrup", "corn oil", "dextrose (corn-derived)"] },
       { "crop_family": "soy", "aliases": ["soy", "soybean", "soybean oil", "soy lecithin", "soy protein", "textured vegetable protein"] },
       { "crop_family": "canola", "aliases": ["canola", "canola oil", "rapeseed oil"] },
-      { "crop_family": "cottonseed", "aliases": ["cottonseed", "cottonseed oil"] },
+      { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
       { "crop_family": "sugar_beet", "aliases": ["sugar beet", "beet sugar"] },
       { "crop_family": "alfalfa", "aliases": ["alfalfa"] },
       { "crop_family": "papaya", "aliases": ["papaya"] },
       { "crop_family": "apple", "aliases": ["apple"] },
-      { "crop_family": "cotton", "aliases": ["cotton", "cottonseed", "cottonseed oil"] },
-      { "crop_family": "potato", "aliases": ["potato"] },
       { "crop_family": "zucchini", "aliases": ["zucchini", "summer squash"] },
-      { "crop_family": "salmon", "aliases": ["salmon", "pink salmon", "red salmon", "smoked salmon", "natural salmon", "oncorhynchus gorbuscha", "oncorhynchus nerka"] }
+      { "crop_family": "potato", "aliases": ["potato"] }
     ]
   },
   "ambiguous_derivative_matches": {
@@ -604,9 +612,9 @@ insert into products (barcode, name, brand, category, subcategory, ingredients_t
   'gmo_food', 'packaged_food',
   'Roasted peanuts, hydrogenated vegetable oil (cottonseed, rapeseed), sugar, salt',
   'high', 'High likelihood', 'high',
-  '[{"term":"cottonseed","normalized":"cottonseed","kind":"explicit","detail":"cottonseed family"},{"term":"rapeseed","normalized":"rapeseed","kind":"explicit","detail":"canola family (mapped from rapeseed)"}]'::jsonb,
-  'Two distinct explicit crop families (cottonseed + canola/rapeseed) → N=2+, high likelihood.',
-  'Seeded as the N=2+ reference case for the high-likelihood badge.', '1.0'
+  '[{"term":"cottonseed","normalized":"cotton","kind":"explicit","detail":"cotton"},{"term":"rapeseed","normalized":"canola","kind":"explicit","detail":"canola (mapped from rapeseed)"}]'::jsonb,
+  'Two distinct explicit crop families (cotton + canola/rapeseed) → N=2+, high likelihood.',
+  'Seeded as the N=2+ reference case for the high-likelihood badge. matched_terms normalised under ruleset v1.1 (cottonseed is the "cotton" family).', '1.1'
 );
 
 -- ============ WITHOUT barcode (tier 2, fuzzy name match) ============
@@ -889,19 +897,19 @@ insert into products (barcode, name, brand, category, subcategory, ingredients_t
   NULL, 'Wild salmon fillets', 'Sainsbury''s',
   'gmo_food', 'packaged_food',
   'pink salmon (oncorhynchus gorbuscha)',
-  'medium', 'Medium GMO Likelihood', 'high',
-  '[{"term":"pink salmon  oncorhynchus gorbuscha","normalized":"salmon","kind":"explicit","detail":"salmon"}]'::jsonb,
-  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
-  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+  'low', 'Low GMO Likelihood', 'high',
+  '[]'::jsonb,
+  'No ingredients commonly derived from genetically modified crops were found on this label.',
+  'Seeded from the validation set. Corrected under ruleset v1.1: "salmon" was removed as an explicit crop family (it is an animal product, not a GMO crop), so this no longer scores as a crop match.', '1.1'
 ),
 (
   '0096619256976', 'Smoked Salmon –', 'Kirkland Signature',
   'gmo_food', 'packaged_food',
   'smoked salmon',
-  'medium', 'Medium GMO Likelihood', 'high',
-  '[{"term":"smoked salmon","normalized":"salmon","kind":"explicit","detail":"salmon"}]'::jsonb,
-  'This estimates likelihood from the ingredients listed. It cannot confirm GMO content — only lab testing can.',
-  'Validation-set seed row (SHF GMO ingredient lists) — seeded for category variety.', '1.0'
+  'low', 'Low GMO Likelihood', 'high',
+  '[]'::jsonb,
+  'No ingredients commonly derived from genetically modified crops were found on this label.',
+  'Seeded from the validation set. Corrected under ruleset v1.1: "salmon" was removed as an explicit crop family (it is an animal product, not a GMO crop), so this no longer scores as a crop match.', '1.1'
 ),
 (
   '5099874252436', 'Papaya Goats Cheese', 'Dunnes Stores',

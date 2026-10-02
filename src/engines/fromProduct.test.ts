@@ -68,8 +68,15 @@ describe("productToEngineResult — FR-6 stored verdict mapping", () => {
   })
 
   it("describes name-match provenance", () => {
-    const result = productToEngineResult(sampleProduct(), "name")
+    const result = productToEngineResult(sampleProduct(), "name", 0.9)
     expect(result.confidence.factors[0]).toContain("name")
+    expect(result.confidence.tier).toBe("high")
+  })
+
+  it("caps tentative name matches at medium confidence", () => {
+    const result = productToEngineResult(sampleProduct(), "name", 0.56)
+    expect(result.confidence.tier).toBe("medium")
+    expect(result.confidence.factors[0]).toContain("capped at Medium")
   })
 
   it("falls back to the GMO constraint notice when guidance_text is missing", () => {
@@ -97,12 +104,49 @@ describe("productToEngineResult — FR-6 stored verdict mapping", () => {
     expect(result.confidence.score).toBe(1)
   })
 
-  it("normalizes a 'none' result tier to low for the UI", () => {
+  it("preserves a 'none' result tier instead of collapsing it to 'low'", () => {
+    // 'none' is a first-class result tier, not a synonym for 'low'. Collapsing
+    // it made the same fluoride-free product report a different tier depending
+    // on whether it was in the catalogue.
     const result = productToEngineResult(
-      sampleProduct({ result_tier: "none", result_label: "No GMO Likelihood" }),
+      sampleProduct({ result_tier: "none", result_label: "Fluoride-Free" }),
       "none"
     )
-    expect(result.result.tier).toBe("low")
+    expect(result.result.tier).toBe("none")
+    expect(result.result.label).toBe("Fluoride-Free")
+  })
+
+  it("matches the live engine for an oral_care fluoride-free product", () => {
+    const result = productToEngineResult(
+      sampleOralCareProduct({ result_tier: "none", result_label: "Fluoride-Free" }),
+      "name"
+    )
+    expect(result.result.tier).toBe("none")
+  })
+
+  it("penalizes a low-confidence OCR read on the stored-verdict path (FR-3)", () => {
+    const clean = productToEngineResult(sampleProduct(), "barcode", undefined, 0.9)
+    expect(clean.confidence.tier).toBe("high")
+
+    // The stored row describes the product; the OCR confidence describes how
+    // reliably THIS label was read. A catalogue hit from a barely-readable
+    // photo must not report the row's curated High with no acknowledgement.
+    const poor = productToEngineResult(sampleProduct(), "barcode", undefined, 0.36)
+    expect(poor.confidence.tier).toBe("medium")
+    expect(poor.confidence.score).toBe(2)
+    expect(poor.confidence.factors.some((f) => f.includes("OCR quality"))).toBe(true)
+  })
+
+  it("stacks the tentative-match cap and the OCR penalty", () => {
+    // Stored High → capped to Medium by a 0.56 name match → Low under poor OCR.
+    const result = productToEngineResult(sampleProduct(), "name", 0.56, 0.36)
+    expect(result.confidence.tier).toBe("low")
+  })
+
+  it("leaves the tier alone when no OCR confidence is supplied", () => {
+    const result = productToEngineResult(sampleProduct(), "barcode")
+    expect(result.confidence.tier).toBe("high")
+    expect(result.confidence.factors).toHaveLength(1)
   })
 
   it("drops malformed entries in matched_terms instead of crashing", () => {

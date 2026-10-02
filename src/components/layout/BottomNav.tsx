@@ -1,58 +1,94 @@
 "use client"
 
-// Bottom tab bar — the public app's primary navigation (08 §3 "Navigation"):
-// Members see Home / Submissions / Settings; guests see Home only. Icons +
-// labels use --primary for the active item and --muted-foreground otherwise.
-// It is safe-area aware, while the pre-auth entry screens (onboarding, register,
-// login) and the admin routes hide it entirely. "Submissions" is the tab —
-// there is no separate scan log (Phase A prompt).
+// GMO Check tab bar (Figma `bobby`, node 948:3154) — Home / Scan / History /
+// Learn, with Scan raised into a mint-green circle that breaks the bar's top
+// edge. One set of tabs for everyone: the design has no guest/member split,
+// and "History" replaced the old "Submissions"/"Setting" naming.
+//
+// Visibility is two questions, deliberately kept apart:
+//   • which ROUTES never want the bar at all — the pre-auth entry screens and
+//     admin, which has its own navigation;
+//   • whether the CURRENT PAGE wants it out of the way for a moment, which only
+//     the full-bleed scan viewfinder does (lib/navVisibility).
+// /scan is NOT in the route list any more: hiding the bar for the whole scan
+// flow meant tapping the Scan tab removed the tab bar that owned it.
+//
+// A spacer of the same height is rendered after the bar so fixed positioning
+// never covers the last row of content.
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { History, House, Settings } from "lucide-react"
+import { useSyncExternalStore } from "react"
+import { BookOpen, History, House, ScanLine } from "lucide-react"
+import {
+  getNavHiddenServerSnapshot,
+  getNavHiddenSnapshot,
+  subscribeToNav,
+} from "@/lib/navVisibility"
 import { cn } from "cn"
 
-const MEMBER_TABS = [
-  { href: "/", label: "Home", icon: House, exact: true },
-  { href: "/history", label: "Submissions", icon: History, exact: false },
-  { href: "/settings", label: "Settings", icon: Settings, exact: false },
+// Home points at /guest-dashboard, NOT "/". The root path unconditionally
+// redirects to /onboarding, and /onboarding hides this nav — so a "Home" tab
+// linking to "/" dumped people into the 3-slide carousel with no way out.
+// /guest-dashboard is the actual hub.
+const TABS = [
+  { href: "/guest-dashboard", label: "Home", icon: House, exact: true, raised: false },
+  { href: "/scan", label: "Scan", icon: ScanLine, exact: false, raised: true },
+  { href: "/history", label: "History", icon: History, exact: false, raised: false },
+  { href: "/learn", label: "Learn", icon: BookOpen, exact: false, raised: false },
 ]
 
-const GUEST_TABS = [
-  { href: "/guest-dashboard", label: "Home", icon: House, exact: true },
-]
+const HIDDEN_PREFIXES = ["/admin", "/onboarding", "/register", "/login", "/auth"]
 
 export function BottomNav() {
   const pathname = usePathname()
-  if (
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/login")
+  const hiddenByPage = useSyncExternalStore(
+    subscribeToNav,
+    getNavHiddenSnapshot,
+    getNavHiddenServerSnapshot
   )
-    return null
-  const tabs = pathname.startsWith("/guest-dashboard") ? GUEST_TABS : MEMBER_TABS
+  if (hiddenByPage) return null
+  if (HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return null
 
   return (
     <>
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-surface pb-[env(safe-area-inset-bottom)] shadow-sm"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-surface pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="mx-auto flex h-16 max-w-md items-stretch">
-          {tabs.map((tab) => {
+        <div className="mx-auto flex h-16 w-full max-w-[402px] items-stretch px-5">
+          {TABS.map((tab) => {
             const active = tab.exact
               ? pathname === tab.href
               : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
             const Icon = tab.icon
+
+            if (tab.raised) {
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-0.5 pb-2 text-[11px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <span className="absolute -top-4 flex size-12 items-center justify-center rounded-full bg-gcheck-accent text-white shadow-md ring-4 ring-surface">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <span className={active ? "text-gcheck-accent" : "text-gcheck-body"}>
+                    {tab.label}
+                  </span>
+                </Link>
+              )
+            }
+
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
+                  active ? "text-gcheck-accent" : "text-gcheck-body hover:text-foreground"
                 )}
               >
                 <Icon className="size-5" aria-hidden="true" />

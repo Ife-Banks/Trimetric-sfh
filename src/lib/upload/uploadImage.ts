@@ -38,7 +38,11 @@ export function coarseClientFingerprint(): string {
   for (let i = 0; i < raw.length; i++) {
     hash = (hash * 33) ^ raw.charCodeAt(i)
   }
-  return `fp-${(hash >>> 0).toString(16)}`
+  // Pad to a fixed width. submissionPayloadSchema requires min(8); a 32-bit
+  // hash below 0x100000 renders as <=5 hex digits, so `fp-` + that was only 7
+  // characters and the submit was rejected with an unexplainable 422 roughly
+  // once every 4096 attempts.
+  return `fp-${(hash >>> 0).toString(16).padStart(8, "0")}`
 }
 
 // Upload an already-encoded JPEG into `submission-images` under
