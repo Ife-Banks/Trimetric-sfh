@@ -29,7 +29,6 @@ import { isFrontPanelReadable, type IdentificationResult } from "@/lib/identific
 // Static import: PipelineError is a tiny leaf class and needs to be in scope
 // in the catch block so its user-facing message is shown verbatim.
 import { PipelineError } from "@/lib/scan/pipeline";
-import { scanStepHidesTabBar, setNavHidden } from "@/lib/navVisibility";
 import { receiptFrom, recordScan } from "@/lib/scanHistory";
 import type { OcrProgress, RecognizeResult } from "@/lib/ocr/types";
 import type { EngineContext, EngineResult } from "@/engines/types";
@@ -149,16 +148,9 @@ function ScanPage() {
   }, [router]);
   const category: CategoryChoice = categoryFromParam(urlCategory);
 
-  // The tab bar is hidden ONLY while the viewfinder / analyzing screen is up.
-  // Those steps are full-bleed and own their controls, and a tab bar over a live
-  // camera is unusable — but every result step keeps it. Hiding it for the whole
-  // of /scan is what made tapping the Scan tab appear to remove the navigation
-  // that owned it (lib/navVisibility).
-  const hideTabBar = scanStepHidesTabBar(step);
-  useEffect(() => {
-    setNavHidden(hideTabBar);
-    return () => setNavHidden(false);
-  }, [hideTabBar]);
+  // The tab bar now stays up on EVERY step, the viewfinder and analyzing screen
+  // included — the bar is always visible across the app, so abandoning a scan
+  // mid-capture can never strand the user without navigation.
 
   // Debug-only surfaces (demo category selector, engine diagnostics) are gated
   // behind ?debug=1 so the shipped UI never shows ephemeral controls.
@@ -433,10 +425,15 @@ function ScanPage() {
   return (
     <PageContainer
       className={
+        // No `min-h-dvh` on the full-bleed steps: PageContainer is `flex-1`
+        // inside the app shell, which already fills the viewport minus the tab
+        // bar's reserved height. `min-h-dvh` measured the container against the
+        // WHOLE viewport, so with the bar's 64px spacer after it the document
+        // came out 64px too tall and every capture step scrolled.
         step === "front" || step === "back" || step === "analyzing"
-          ? cn("mx-auto min-h-dvh w-full max-w-[402px] px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-ink", step === "analyzing" && category === "oral_care" ? "bg-gradient-to-b from-mint-start via-brand-wash to-brand-wash" : "bg-surface")
+          ? cn("mx-auto w-full max-w-[402px] px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-ink", step === "analyzing" && category === "oral_care" ? "bg-gradient-to-b from-mint-start via-brand-wash to-brand-wash" : "bg-surface")
           : (step === "done" || step === "provisional") && category === "oral_care"
-            ? "mx-auto min-h-dvh w-full max-w-[402px] bg-gradient-to-b from-mint-start via-brand-wash to-brand-wash px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-ink"
+            ? "mx-auto w-full max-w-[402px] bg-gradient-to-b from-mint-start via-brand-wash to-brand-wash px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-ink"
           : "pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
       }
     >

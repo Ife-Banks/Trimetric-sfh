@@ -1,15 +1,14 @@
 // @vitest-environment jsdom
 //
-// The tab bar's visibility rule.
+// The tab bar's shape, contents and active state.
 //
-// This exists because the rule was wrong in a way no other test could see: the
-// bar was hidden for the WHOLE of /scan, so tapping the Scan tab removed the
-// tab bar that owned it. Nothing in the suite covered navigation chrome, so the
-// regression was invisible until someone used the app.
-//
-// The rule is two questions and these cases keep them apart:
-//   • route  — the pre-auth entry screens and admin never show the bar
-//   • page   — a full-bleed page (the scan viewfinder) may hide it, temporarily
+// Two things this guards, both of which were wrong in the shipped UI:
+//   • Visibility — the bar must never disappear mid-flow. It was once hidden for
+//     the whole of /scan, so tapping the Scan tab removed the bar that owned it.
+//     It now stays up on every in-app screen, camera included.
+//   • Active state — the raised "popping out" icon used to be hardcoded onto
+//     Scan, so Scan looked selected on every page. It is now the marker of the
+//     ACTIVE tab, and the tab set differs between the hub and the flow.
 
 import type { ReactNode } from "react"
 import { describe, it, expect, afterEach, vi } from "vitest"
@@ -22,7 +21,7 @@ const state = vi.hoisted(() => ({ path: "/guest-dashboard" }))
 vi.mock("next/navigation", () => ({ usePathname: () => state.path }))
 
 // next/link needs an app-router context that a bare render does not provide;
-// the test only cares whether the bar is mounted, not where it points.
+// the test only cares whether the bar is mounted and where its tabs point.
 vi.mock("next/link", async () => {
   const React = await import("react")
   return {
@@ -32,30 +31,57 @@ vi.mock("next/link", async () => {
 })
 
 import { BottomNav } from "@/components/layout/BottomNav"
-import { scanStepHidesTabBar, setNavHidden } from "@/lib/navVisibility"
 
 afterEach(() => {
   cleanup()
-  setNavHidden(false)
   state.path = "/guest-dashboard"
 })
+
+const NAV = 'nav[aria-label="Primary"]'
 
 function navIsVisible(path: string): boolean {
   state.path = path
   const { container } = render(<BottomNav />)
-  return container.querySelector('nav[aria-label="Primary"]') !== null
+  return container.querySelector(NAV) !== null
+}
+
+/** Tab labels in order. Empty when the bar is not rendered. */
+function tabLabels(path: string): string[] {
+  state.path = path
+  const { container } = render(<BottomNav />)
+  return Array.from(container.querySelectorAll(`${NAV} a`)).map(
+    (a) => a.textContent?.trim() ?? ""
+  )
+}
+
+/** Label of the tab marked aria-current="page", or null when none matches. */
+function activeLabel(path: string): string | null {
+  state.path = path
+  const { container } = render(<BottomNav />)
+  const el = container.querySelector(`${NAV} a[aria-current="page"]`)
+  return el?.textContent?.trim() ?? null
+}
+
+/** Does the ACTIVE tab carry the raised circular icon? */
+function activeHasRaisedIcon(path: string): boolean {
+  state.path = path
+  const { container } = render(<BottomNav />)
+  const el = container.querySelector(`${NAV} a[aria-current="page"]`)
+  return Boolean(el?.querySelector("span.absolute"))
+}
+
+/** How many tabs carry the raised circular icon (should be 0 or 1). */
+function raisedIconCount(path: string): number {
+  state.path = path
+  const { container } = render(<BottomNav />)
+  return container.querySelectorAll(`${NAV} a span.absolute`).length
 }
 
 describe("BottomNav visibility", () => {
-  it("shows on every in-app destination", () => {
-    for (const path of ["/guest-dashboard", "/history", "/settings", "/learn"]) {
+  it("shows on every in-app destination, the scan camera included", () => {
+    for (const path of ["/guest-dashboard", "/gmo", "/scan", "/history", "/learn", "/settings"]) {
       expect(navIsVisible(path), `${path} should keep the tab bar`).toBe(true)
     }
-  })
-
-  it("stays on /scan, because the Scan tab must not remove the bar it lives in", () => {
-    expect(navIsVisible("/scan")).toBe(true)
-    expect(navIsVisible("/scan?category=fluoride")).toBe(true)
   })
 
   it("is hidden on the pre-auth entry screens and on admin", () => {
@@ -63,26 +89,46 @@ describe("BottomNav visibility", () => {
       expect(navIsVisible(path), `${path} should hide the tab bar`).toBe(false)
     }
   })
+})
 
-  it("hides only while a page explicitly asks it to, and comes straight back", () => {
-    setNavHidden(true)
-    expect(navIsVisible("/scan")).toBe(false)
+describe("BottomNav tab sets", () => {
+  it("gives the hub its own three tabs", () => {
+    expect(tabLabels("/guest-dashboard")).toEqual(["Home", "History", "Settings"])
+  })
 
-    setNavHidden(false)
-    expect(navIsVisible("/scan")).toBe(true)
+  it("keeps the hub tabs on /settings so the Settings tab does not vanish when tapped", () => {
+    expect(tabLabels("/settings")).toEqual(["Home", "History", "Settings"])
+  })
+
+  it("gives the GMO flow four tabs", () => {
+    expect(tabLabels("/gmo")).toEqual(["Home", "Scan", "History", "Learn"])
+    expect(tabLabels("/scan")).toEqual(["Home", "Scan", "History", "Learn"])
+    expect(tabLabels("/learn")).toEqual(["Home", "Scan", "History", "Learn"])
+    expect(tabLabels("/history")).toEqual(["Home", "Scan", "History", "Learn"])
   })
 })
 
-describe("scan steps that hide the tab bar", () => {
-  it("hides it only behind the viewfinder and the analyzing screen", () => {
-    for (const step of ["front", "back", "analyzing"]) {
-      expect(scanStepHidesTabBar(step), step).toBe(true)
-    }
+describe("BottomNav active tab", () => {
+  it("marks the tab that matches the current route, and only that one", () => {
+    expect(activeLabel("/guest-dashboard")).toBe("Home")
+    expect(activeLabel("/history")).toBe("History")
+    expect(activeLabel("/learn")).toBe("Learn")
+    expect(activeLabel("/scan")).toBe("Scan")
+    expect(activeLabel("/settings")).toBe("Settings")
   })
 
-  it("keeps it on every step that shows the user something", () => {
-    for (const step of ["review", "done", "provisional", "add", "thanks"]) {
-      expect(scanStepHidesTabBar(step), step).toBe(false)
-    }
+  it("marks nothing active on a route that is not a tab", () => {
+    // /gmo is the GMO flow's home, reached from the hub. Nothing here should read
+    // as selected — this is the case that used to show a permanently-active Scan.
+    expect(activeLabel("/gmo")).toBeNull()
+    expect(raisedIconCount("/gmo")).toBe(0)
+  })
+
+  it("puts the raised icon on the active tab only", () => {
+    expect(activeHasRaisedIcon("/scan")).toBe(true)
+    expect(activeHasRaisedIcon("/guest-dashboard")).toBe(true)
+    expect(activeHasRaisedIcon("/settings")).toBe(true)
+    expect(raisedIconCount("/scan")).toBe(1)
+    expect(raisedIconCount("/history")).toBe(1)
   })
 })

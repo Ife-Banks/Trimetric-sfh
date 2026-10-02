@@ -1,54 +1,73 @@
 "use client"
 
-// GMO Check tab bar (Figma `bobby`, node 948:3154) — Home / Scan / History /
-// Learn, with Scan raised into a mint-green circle that breaks the bar's top
-// edge. One set of tabs for everyone: the design has no guest/member split,
-// and "History" replaced the old "Submissions"/"Setting" naming.
+// MUTAGENIC's bottom tab bar. Two shapes, chosen by route:
 //
-// Visibility is two questions, deliberately kept apart:
-//   • which ROUTES never want the bar at all — the pre-auth entry screens and
-//     admin, which has its own navigation;
-//   • whether the CURRENT PAGE wants it out of the way for a moment, which only
-//     the full-bleed scan viewfinder does (lib/navVisibility).
-// /scan is NOT in the route list any more: hiding the bar for the whole scan
-// flow meant tapping the Scan tab removed the tab bar that owned it.
+//   • hub  — /guest-dashboard and /settings: Home / History / Settings.
+//   • flow — every other in-app screen:      Home / Scan / History / Learn.
 //
-// A spacer of the same height is rendered after the bar so fixed positioning
-// never covers the last row of content.
+// The ACTIVE tab is the one whose route matches, and it is the tab that gets the
+// big popping-out circular icon. That treatment used to be hardcoded onto Scan,
+// so Scan wore the raised circle on every page and read as the selected tab even
+// when you were nowhere near /scan. Active is now derived from the pathname only,
+// which also means that on /gmo — which is not itself a tab — nothing looks
+// selected.
+//
+// The bar is visible on every in-app screen. It is not shown on the pre-auth
+// entry screens, nor on /admin, which has its own navigation.
+//
+// A spacer of the same height follows the bar so its fixed positioning never
+// covers the last row of a page's content.
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSyncExternalStore } from "react"
-import { BookOpen, History, House, ScanLine } from "lucide-react"
-import {
-  getNavHiddenServerSnapshot,
-  getNavHiddenSnapshot,
-  subscribeToNav,
-} from "@/lib/navVisibility"
+import { BookOpen, History, House, ScanLine, Settings, type LucideIcon } from "lucide-react"
 import { cn } from "cn"
+
+interface NavTab {
+  href: string
+  label: string
+  icon: LucideIcon
+  /** Match the pathname exactly rather than by prefix. */
+  exact?: boolean
+}
 
 // Home points at /guest-dashboard, NOT "/". The root path unconditionally
 // redirects to /onboarding, and /onboarding hides this nav — so a "Home" tab
-// linking to "/" dumped people into the 3-slide carousel with no way out.
-// /guest-dashboard is the actual hub.
-const TABS = [
-  { href: "/guest-dashboard", label: "Home", icon: House, exact: true, raised: false },
-  { href: "/scan", label: "Scan", icon: ScanLine, exact: false, raised: true },
-  { href: "/history", label: "History", icon: History, exact: false, raised: false },
-  { href: "/learn", label: "Learn", icon: BookOpen, exact: false, raised: false },
+// linking to "/" dumped people into the carousel with no way out.
+const HUB_TABS: NavTab[] = [
+  { href: "/guest-dashboard", label: "Home", icon: House, exact: true },
+  { href: "/history", label: "History", icon: History },
+  { href: "/settings", label: "Settings", icon: Settings },
+]
+
+const FLOW_TABS: NavTab[] = [
+  { href: "/guest-dashboard", label: "Home", icon: House, exact: true },
+  { href: "/scan", label: "Scan", icon: ScanLine },
+  { href: "/history", label: "History", icon: History },
+  { href: "/learn", label: "Learn", icon: BookOpen },
 ]
 
 const HIDDEN_PREFIXES = ["/admin", "/onboarding", "/register", "/login", "/auth"]
 
+// Settings lives in the hub bar, so the hub bar has to stay on /settings too.
+// Scoping it to /guest-dashboard alone meant tapping Settings swapped in the flow
+// bar — which has no Settings tab — and the tab you had just used vanished from
+// under you.
+function isHubRoute(pathname: string): boolean {
+  return pathname === "/guest-dashboard" || pathname === "/settings"
+}
+
+function isActive(tab: NavTab, pathname: string): boolean {
+  return tab.exact
+    ? pathname === tab.href
+    : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+}
+
 export function BottomNav() {
   const pathname = usePathname()
-  const hiddenByPage = useSyncExternalStore(
-    subscribeToNav,
-    getNavHiddenSnapshot,
-    getNavHiddenServerSnapshot
-  )
-  if (hiddenByPage) return null
   if (HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return null
+
+  const tabs = isHubRoute(pathname) ? HUB_TABS : FLOW_TABS
 
   return (
     <>
@@ -57,42 +76,30 @@ export function BottomNav() {
         className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-surface pb-[env(safe-area-inset-bottom)]"
       >
         <div className="mx-auto flex h-16 w-full max-w-[402px] items-stretch px-5">
-          {TABS.map((tab) => {
-            const active = tab.exact
-              ? pathname === tab.href
-              : pathname === tab.href || pathname.startsWith(`${tab.href}/`)
+          {tabs.map((tab) => {
+            const active = isActive(tab, pathname)
             const Icon = tab.icon
-
-            if (tab.raised) {
-              return (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  aria-current={active ? "page" : undefined}
-                  className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-0.5 pb-2 text-[11px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50"
-                >
-                  <span className="absolute -top-4 flex size-12 items-center justify-center rounded-full bg-gcheck-accent text-white shadow-md ring-4 ring-surface">
-                    <Icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <span className={active ? "text-gcheck-accent" : "text-gcheck-body"}>
-                    {tab.label}
-                  </span>
-                </Link>
-              )
-            }
-
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[11px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
-                  active ? "text-gcheck-accent" : "text-gcheck-body hover:text-foreground"
+                  "relative flex min-w-0 flex-1 flex-col items-center text-[11px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
+                  active
+                    ? "justify-end gap-0.5 pb-2 text-gcheck-accent"
+                    : "justify-center gap-1 text-gcheck-body hover:text-foreground"
                 )}
               >
-                <Icon className="size-5" aria-hidden="true" />
-                {tab.label}
+                {active ? (
+                  // The popping-out circular icon IS the active state.
+                  <span className="absolute -top-4 flex size-12 items-center justify-center rounded-full bg-gcheck-accent text-white shadow-md ring-4 ring-surface">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                ) : (
+                  <Icon className="size-5" aria-hidden="true" />
+                )}
+                <span className="truncate">{tab.label}</span>
               </Link>
             )
           })}

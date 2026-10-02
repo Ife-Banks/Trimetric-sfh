@@ -342,23 +342,23 @@ contained to the relevant section.
 
 ### Navigation
 
-Bottom tab bar (mobile, public-facing), one set for everyone — the design has
-no guest/member split: **Home / Scan / History / Learn**, with Scan raised into
-a circular button. Icon + label; active item in `--gcheck-accent`, inactive in
-`--gcheck-body`.
+Bottom tab bar (mobile, public-facing). Two tab sets, chosen by route:
 
-Visibility is TWO questions and they are deliberately kept apart
-(`src/lib/navVisibility.ts`):
+- **Hub** — `/guest-dashboard` and `/settings`: **Home / History / Settings**.
+- **Flow** — every other in-app screen: **Home / Scan / History / Learn**.
 
-- **Route** — the pre-auth entry screens (`/onboarding`, `/register`, `/login`,
-  `/auth/*`) and `/admin` never show the bar at all.
-- **Page** — a page that owns the whole screen may hide it *temporarily*.
-  Only the scan viewfinder and the analyzing screen do; review, a result, the
-  add-product form and the thanks screen all keep it.
+The active tab is the one whose route matches, and it is the tab rendered with
+the **big, popping-out circular icon**. That treatment is the active-state
+marker, not a fixed decoration on Scan — it used to be hardcoded onto Scan, so
+Scan read as selected on every page. Active in `--gcheck-accent` (white on the
+circle), inactive in `--gcheck-body`.
 
-Hiding it for the whole of `/scan` is explicitly wrong: that removes the tab bar
-which owns the tab the user just tapped and strands them on the result with no
-navigation. `src/components/layout/BottomNav.test.tsx` pins the rule.
+The bar is visible on **every** in-app screen, the live scan viewfinder
+included: a capture step must never remove the navigation that owns the tab the
+user just tapped. It is hidden only on the pre-auth entry screens
+(`/onboarding`, `/register`, `/login`, `/auth/*`) and `/admin`, which has its own
+navigation. `src/components/layout/BottomNav.test.tsx` pins the tab sets, the
+active state and the visibility rule.
 
 The account panel is a right-hand sheet opened from the avatar, and it is where
 sign-out lives — there is no side drawer.

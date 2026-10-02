@@ -94,15 +94,11 @@ export function CameraView({
           video: { facingMode: { ideal: "environment" } },
         });
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await new Promise<void>((resolve) => {
-            const el = videoRef.current;
-            if (!el) return resolve();
-            if (el.readyState >= 1) return resolve();
-            el.addEventListener("loadeddata", () => resolve(), { once: true });
-          });
-        }
+        // Do NOT attach the stream here. The <video> is rendered only by the
+        // `status === "ready"` branch, so while we are still "requesting" the
+        // ref is null — assigning to it silently did nothing and the viewfinder
+        // came up as a black rectangle with a live track behind it. The effect
+        // below attaches it once the element actually exists.
         setStatus("ready");
       } catch (err) {
         setStatus("error");
@@ -111,6 +107,20 @@ export function CameraView({
     },
     [stopTracks]
   );
+
+  // Attach the stream to the viewfinder once the element that shows it is in
+  // the DOM. This has to happen on the status transition: `startCamera` resolves
+  // while status is still "requesting", when no <video> exists yet.
+  useEffect(() => {
+    if (status !== "ready") return;
+    const el = videoRef.current;
+    const stream = streamRef.current;
+    if (!el || !stream) return;
+    if (el.srcObject !== stream) el.srcObject = stream;
+    // Safari/iOS can decline to autoplay a stream attached after mount. Harmless
+    // elsewhere, and it runs inside the user gesture that started the camera.
+    void el.play().catch(() => {});
+  }, [status]);
 
   const toggleFlash = useCallback(async () => {
     const track = streamRef.current?.getVideoTracks()[0];
