@@ -941,6 +941,31 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
+// AI vision first, local Tesseract as fallback. The Groq call silently returns
+// empty text when NEXT_PUBLIC_GROQ_API_KEY is unset, when the image is over the
+// provider's base64 size limit, or on any model/network error — and an empty
+// panel then surfaces as "No ingredient text could be read" even though the
+// on-device Tesseract worker could have read it. The paid model reads stacked
+// brand names better, so keep it first; the moment it yields nothing, fall back
+// to the (still-present, production-tested) worker with the same prepared blob.
+async function recognizeWithFallback(
+  prepared: { blob: Blob; skewAngle?: number },
+  label: "front" | "back"
+): Promise<RecognizeResult> {
+  const aiResult = await scanImageWithAI(await blobToBase64(prepared.blob));
+  if (aiResult.text.trim()) return aiResult;
+  console.warn(
+    `[scan] AI vision produced no text for the ${label} panel; falling back to local Tesseract.`
+  );
+  const { getOcrClient } = await import("@/lib/ocr/tesseract");
+  const local = await getOcrClient().recognize(prepared.blob);
+  return {
+    text: local.text,
+    meanConfidence: local.meanConfidence,
+    isTruncated: local.isTruncated,
+  };
+}
+
 function ScanPage() {
   const router = useRouter();
   const [step, setStep] = useState<ScanStep>("front");
@@ -1097,14 +1122,10 @@ function ScanPage() {
 
       // const client = getOcrClient();
       setPipelineStage(1); // reading product name
-      const frontBase64 = await blobToBase64(frontOcrImage.blob);
-      frontOcr = await scanImageWithAI(frontBase64);
-      // frontOcr = await client.recognize(frontOcrImage.blob, setProgress);
+      frontOcr = await recognizeWithFallback(frontOcrImage, "front");
 
       setPipelineStage(2); // reading ingredients
-      const backBase64 = await blobToBase64(backOcrImage.blob);
-      backOcr = await scanImageWithAI(backBase64);
-      // backOcr = await client.recognize(backOcrImage.blob, setProgress);
+      backOcr = await recognizeWithFallback(backOcrImage, "back");
 
       // OCR log validation checks
       for (const [panel, ocr] of [

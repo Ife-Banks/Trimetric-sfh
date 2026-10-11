@@ -33,7 +33,7 @@ const securityHeaders = [
       // wss://ws-us3.pusher.com is the Vercel Toolbar's realtime channel;
       // vercel.live serves its feedback script. Both are preview-only, but the
       // header is emitted on every production build (including previews).
-      "connect-src 'self' https://*.supabase.co https://vercel.live wss://ws-us3.pusher.com",
+      "connect-src 'self' https://*.supabase.co https://vercel.live wss://ws-us3.pusher.com https://api.groq.com",
       "worker-src 'self' blob:",
       "frame-src https://vercel.live",
       "frame-ancestors 'none'",
