@@ -1,9 +1,15 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
+// Instantiated lazily, inside the function, NOT at module scope. A module-level
+// `new Groq(...)` throws during Next's prerender of /scan when the key is absent
+// from the build environment, which fails the whole production build instead of
+// only this feature. Keep the construction deferred and fail soft here.
+function createGroqClient(apiKey: string | undefined): Groq {
+  return new Groq({
+    apiKey,
+    dangerouslyAllowBrowser: true,
+  });
+}
 
 export interface RecognizeResult {
   text: string;
@@ -13,6 +19,18 @@ export interface RecognizeResult {
 
 export async function scanImageWithAI(imageBase64OrUrl: string): Promise<RecognizeResult> {
   try {
+    const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY;
+    if (!apiKey) {
+      console.error("AI Vision Scan Error: NEXT_PUBLIC_GROQ_API_KEY is not set");
+      return {
+        text: "",
+        meanConfidence: 0,
+        isTruncated: false,
+      };
+    }
+
+    const groq = createGroqClient(apiKey);
+
     const imageUrl = imageBase64OrUrl.startsWith("data:")
       ? imageBase64OrUrl
       : `data:image/jpeg;base64,${imageBase64OrUrl}`;
