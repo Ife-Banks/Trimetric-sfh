@@ -67,7 +67,8 @@ export function ResultGauge({
         {value ? (
           <>
             <span className="text-h1 font-bold tracking-tight tabular-nums">{value.number}</span>
-            <span className="text-caption text-muted-foreground">{value.caption}</span>
+            {/* <span className="text-caption text-muted-foreground">{value.caption}</span> */}
+            <span className="text-[11px] leading-tight text-muted-foreground text-center px-2">{value.caption}</span>
           </>
         ) : (
           <span className="text-caption text-muted-foreground">No data</span>

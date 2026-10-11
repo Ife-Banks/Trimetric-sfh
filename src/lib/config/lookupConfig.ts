@@ -22,6 +22,63 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
+// export function validateLookupConfig(category: LookupCategory, value: unknown): LookupConfig | null {
+//   if (!isRecord(value) || typeof value.version !== "string" || !value.version.trim()) return null
+
+//   if (category === "gmo_food") {
+//     const explicit = value.explicit_crop_matches
+//     const ambiguous = value.ambiguous_derivative_matches
+//     if (
+//       !isRecord(value.certification_short_circuit) ||
+//       !Array.isArray(value.certification_short_circuit.terms) ||
+//       !isRecord(explicit) ||
+//       !Array.isArray(explicit.entries) ||
+//       !isRecord(ambiguous) ||
+//       !Array.isArray(ambiguous.entries) ||
+//       !Array.isArray(value.low_risk_tokens)
+//     ) return null
+
+//     const validExplicit = explicit.entries.every((entry) =>
+//       isRecord(entry) && typeof entry.crop_family === "string" &&
+//       Array.isArray(entry.aliases) && entry.aliases.every((alias) => typeof alias === "string")
+//     )
+//     const validAmbiguous = ambiguous.entries.every((entry) =>
+//       isRecord(entry) && typeof entry.ingredient === "string"
+//     )
+//     const validCerts = value.certification_short_circuit.terms.every((term) => typeof term === "string")
+//     const validLowRisk = value.low_risk_tokens.every((term) => typeof term === "string")
+//     return validExplicit && validAmbiguous && validCerts && validLowRisk ? value as GmoLookupConfig : null
+//   }
+
+//   const tables = value.category_ppm_tables
+//   if (
+//     !Array.isArray(value.terms_lookup_table) ||
+//     !isRecord(value.subcategory_detection) ||
+//     !isRecord(tables) ||
+//     !Object.values(tables).every((table) => Array.isArray(table))
+//   ) return null
+
+//   const validTerms = value.terms_lookup_table.every((term) => {
+//     if (!isRecord(term) || typeof term.term_id !== "string" ||
+//       typeof term.raw_term !== "string" || typeof term.normalized_term !== "string" ||
+//       typeof term.regex_pattern !== "string" || term.regex_pattern.length > 500) return false
+//     try {
+//       new RegExp(term.regex_pattern, "i")
+//       return true
+//     } catch {
+//       return false
+//     }
+//   })
+//   const validRows = Object.values(tables).every((table) =>
+//     Array.isArray(table) && table.every((row) =>
+//       isRecord(row) && Array.isArray(row.ppm_range) &&
+//       row.ppm_range.length === 2 && row.ppm_range.every((bound) => typeof bound === "number") &&
+//       typeof row.verdict === "string"
+//     )
+//   )
+//   return validTerms && validRows ? value as FluorideLookupConfig : null
+// }
+
 export function validateLookupConfig(category: LookupCategory, value: unknown): LookupConfig | null {
   if (!isRecord(value) || typeof value.version !== "string" || !value.version.trim()) return null
 
@@ -56,7 +113,15 @@ export function validateLookupConfig(category: LookupCategory, value: unknown): 
     !isRecord(value.subcategory_detection) ||
     !isRecord(tables) ||
     !Object.values(tables).every((table) => Array.isArray(table))
-  ) return null
+  ) {
+    console.error("❌ Fluoride config validation failed! Check which field is failing:", {
+      terms_lookup_table: Array.isArray(value.terms_lookup_table),
+      subcategory_detection: isRecord(value.subcategory_detection),
+      category_ppm_tables: isRecord(tables),
+      tables_are_arrays: isRecord(tables) && Object.values(tables).every((table) => Array.isArray(table))
+    });
+    return null
+  }
 
   const validTerms = value.terms_lookup_table.every((term) => {
     if (!isRecord(term) || typeof term.term_id !== "string" ||
@@ -76,6 +141,11 @@ export function validateLookupConfig(category: LookupCategory, value: unknown): 
       typeof row.verdict === "string"
     )
   )
+
+  if (!validTerms || !validRows) {
+    console.error("❌ Terms or Table Rows validation failed:", { validTerms, validRows });
+  }
+
   return validTerms && validRows ? value as FluorideLookupConfig : null
 }
 
@@ -149,6 +219,7 @@ export async function fetchPublishedLookupConfig(
     .eq("category", category)
     .eq("is_published", true)
     .maybeSingle()
+
 
   if (error) throw new Error("Could not load the published ruleset.")
   if (data) {

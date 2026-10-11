@@ -35,7 +35,7 @@ const CONTENT: Record<HubCategory, CategoryContent> = {
     href: "/gmo",
     eyebrow: "Organic verification",
     title: "GMO Check",
-    badge: "DNA checked",
+    badge: "GMO check",
     body: "Analyze food and ingredients for bioengineered DNA, synthetic additives, and certified Non-GMO validation.",
     chips: ["Non-GMO Project", "USDA Organic"],
     cta: "Verify Food",
