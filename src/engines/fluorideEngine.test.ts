@@ -121,13 +121,13 @@ describe("fluorideEngine — mouthwash/rinse tiering", () => {
 })
 
 describe("fluorideEngine — fluoride-free honesty", () => {
-  it("returns No Data instead of Fluoride-Free when no fluoride marker was recognized", () => {
+  it("returns PPM Not Listed instead of Fluoride-Free when no fluoride marker was recognized", () => {
     const result = fluorideEngine(
       "i i i i I i Iy 4 | p . f i 4 f I i i! ih",
       ctx({ ocrMeanConfidence: 0.36 })
     )
 
-    expect(result.result).toEqual({ tier: "none", label: "No Data" })
+    expect(result.result).toEqual({ tier: "none", label: "PPM Not Listed" })
     expect(result.confidence.tier).toBe("low")
     expect(result.guidance).toContain("Insufficient label text")
   })

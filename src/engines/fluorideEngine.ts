@@ -264,7 +264,7 @@ export const fluorideEngine = (
     return {
       category: "oral_care",
       subcategory,
-      result: { tier: "none", label: "No Data" },
+      result: { tier: "none", label: "PPM Not Listed" },
       confidence: {
         tier: "low",
         score: 0,
@@ -359,7 +359,7 @@ export const fluorideEngine = (
   // OCR-quality penalty (−1, once) — FR-3: "If mean OCR confidence < 0.6, this
   // feeds the confidence scoring as a penalty."
   //
-  // This was applied only in the "No Data" branch above, so a normal fluoride
+  // This was applied only in the "PPM Not Listed" branch above, so a normal fluoride
   // verdict ignored it entirely: a label read at 0.36 confidence still scored
   // High. gmoEngine has always applied it on its main path, and the same scan
   // should not be trusted differently just because the product is food rather
