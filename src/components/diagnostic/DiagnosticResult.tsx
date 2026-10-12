@@ -122,14 +122,14 @@ export function DiagnosticResult({
   // no-catalogue-match path, so a verified product with low confidence offered
   // no way to dispute it at all.
   const lowConfidence = result.confidence.tier === "low"
-  const title = result.category === "oral_care" && result.result.label === "No Data"
+  const title = result.category === "oral_care" && result.result.label === "PPM Not Listed"
     ? "Insufficient label data"
     : RESULT_TITLE[result.category][result.result.tier]
   const categorySurface = result.category === "oral_care" ? "bg-accent-fluoride-soft/70" : "bg-accent-gmo-soft"
   const categoryText = result.category === "oral_care" ? "text-accent-fluoride" : "text-accent-gmo"
   const fluorideSummary = result.category === "oral_care" ? (
     <section aria-label="Fluoride result and confidence" className="flex flex-col items-center rounded-2xl bg-surface/75 px-4 pb-4 pt-4 shadow-xs">
-      <ResultGauge tier={result.result.tier} value={gaugeMetric} className="size-36" />
+      <ResultGauge cat="oral_care" tier={result.result.tier} value={gaugeMetric} className="size-36" />
       <h1 className="mt-2 text-center text-lg font-bold tracking-tight">{title}</h1>
       <ResultBadge tier={result.result.tier} label={result.result.label} />
       {!gaugeMetric && <p className="mt-2 text-caption text-muted-foreground">No numeric concentration was read from the label.</p>}
@@ -246,7 +246,7 @@ export function DiagnosticResult({
 
       {result.category === "gmo_food" && <section aria-label="Diagnostic result" className="flex flex-col items-center rounded-2xl bg-surface/75 px-4 pb-4 pt-3 shadow-xs">
         <ConfidenceBadge tier={result.confidence.tier} factors={result.confidence.factors} />
-        <ResultGauge tier={result.result.tier} value={gaugeMetric} className="mt-3 size-32" />
+        <ResultGauge cat="gmo_food" tier={result.result.tier} value={gaugeMetric} className="mt-3 size-32" />
         <ResultBadge tier={result.result.tier} label={result.result.label} />
         {!gaugeMetric && <p className="mt-2 text-caption text-muted-foreground">No numeric metric was read from the label</p>}
       </section>}
@@ -290,7 +290,7 @@ export function DiagnosticResult({
               ? gaugeMetric
                 ? `The ruleset recognized ${gaugeMetric.number} ${gaugeMetric.caption} in the scanned label. This is a screening result, not confirmation of GMO content.`
                 : `The rules engine classified recognized label terms as “${result.result.label}.” This screening cannot confirm GMO content.`
-              : result.result.label === "No Data"
+              : result.result.label === "GMO crop not detected"
                 ? "The scan could not reliably read an active fluoride ingredient or an explicit fluoride-free claim. Retake a clearer ingredient-label photo."
                 : gaugeMetric
                 ? `The scan read ${gaugeMetric.number} ${gaugeMetric.caption}. The published ruleset classifies the result as “${result.result.label}.”`

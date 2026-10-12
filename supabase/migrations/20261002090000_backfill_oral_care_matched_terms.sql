@@ -3,7 +3,7 @@
 --
 -- WHY: the curated import in supabase/import-fluoride-products.sql was generated
 -- before fluorideEngine published `detail` on an active_compound match. Stored
--- rows therefore had no ppm, so the result gauge showed "No data" for every
+-- rows therefore had no ppm, so the result gauge showed "PPM Not Listed" for every
 -- catalogue match — while a cold scan of the SAME label showed e.g. "1500 ppm".
 -- Re-running the import does not help: it skips rows whose name already exists.
 --

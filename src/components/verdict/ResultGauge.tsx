@@ -20,10 +20,12 @@ export function ResultGauge({
   tier,
   value,
   className,
+  cat,
 }: {
   tier: ResultTier
   value?: { number: string; caption: string } | null
   className?: string
+  cat?: "gmo_food" | "oral_care"
 }) {
   const r = 52
   const circumference = 2 * Math.PI * r
@@ -71,8 +73,9 @@ export function ResultGauge({
             <span className="text-[11px] leading-tight text-muted-foreground text-center px-2">{value.caption}</span>
           </>
         ) : (
-          <span className="text-caption text-muted-foreground">No data</span>
-        )}
+            <span className="text-xs font-medium leading-tight text-muted-foreground text-center px-1">
+              {cat === "oral_care" ? "PPM Not Listed" : "No GMO crop  detected"}
+            </span>        )}
       </div>
     </div>
   )

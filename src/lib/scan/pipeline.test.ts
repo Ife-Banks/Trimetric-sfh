@@ -188,7 +188,7 @@ describe("scan pipeline — oral care", () => {
     expect(engineResult.result.label).not.toMatch(/GMO/i);
   });
 
-  it("detects a fluoride-free product rather than reporting no data", () => {
+  it("detects a fluoride-free product rather than reporting PPM Not Listed", () => {
     const back = "Ingredients: Aqua, Hydrated Silica, Glycerin. Fluoride free.";
     const { engineResult } = runScanPipeline({
       category: "oral_care",
@@ -221,7 +221,7 @@ describe("scan pipeline — oral care", () => {
 
   it("reads a fluoride claim printed only on the FRONT panel", () => {
     // Regression: matching ran against the back panel only, so a toothpaste that
-    // states its ppm across the face of the pack returned "No Data" — which
+    // states its ppm across the face of the pack returned "PPM Not Listed" — which
     // reads as a failed scan rather than a product we could not read.
     const back = "Ingredients: Aqua, Hydrated Silica, Glycerin, Sodium Lauryl Sulfate.";
     const { engineResult } = runScanPipeline({
@@ -234,7 +234,7 @@ describe("scan pipeline — oral care", () => {
       lookupConfig: fluorideConfig,
       detectOralCareSubcategory: () => "toothpaste_gel",
     });
-    expect(engineResult.result.label).not.toBe("No Data");
+    expect(engineResult.result.label).not.toBe("PPM Not Listed");
     expect(engineResult.matchedTerms.some((t) => t.kind === "active_compound")).toBe(true);
   });
 

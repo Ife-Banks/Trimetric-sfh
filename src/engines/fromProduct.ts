@@ -100,7 +100,7 @@ export function productToEngineResult(
     subcategory: product.subcategory,
     result: {
       // `none` is a first-class result tier (EngineResult.result.tier), NOT a
-      // synonym for "low". For oral care it means Fluoride-Free / No Data; for
+      // synonym for "low". For oral care it means Fluoride-Free / PPM Not Listed; for
       // food it means no GMO crops found. Collapsing it to "low" made the same
       // product report a different tier depending on whether it happened to be
       // in the catalogue, and rendered a filled gauge beside a "Fluoride-Free"
